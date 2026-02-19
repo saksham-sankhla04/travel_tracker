@@ -1,8 +1,16 @@
+import 'dart:async';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 class NotificationService {
   static final FlutterLocalNotificationsPlugin _plugin =
       FlutterLocalNotificationsPlugin();
+
+  /// Emits notification payloads when user taps a notification (warm start).
+  static final StreamController<String> onNotificationTap =
+      StreamController<String>.broadcast();
+
+  /// Stores payload if the app was launched by tapping a notification (cold start).
+  static String? initialPayload;
 
   static Future<void> initialize() async {
     const androidSettings = AndroidInitializationSettings(
@@ -11,11 +19,23 @@ class NotificationService {
 
     const initSettings = InitializationSettings(android: androidSettings);
 
-    await _plugin.initialize(initSettings);
+    await _plugin.initialize(
+      initSettings,
+      onDidReceiveNotificationResponse: _onNotificationTap,
+    );
 
-    // Pre-create the background service notification channel
-    final androidPlugin =
-        _plugin.resolvePlatformSpecificImplementation<
+    // Check if app was launched from a notification tap
+    final launchDetails = await _plugin.getNotificationAppLaunchDetails();
+    if (launchDetails?.didNotificationLaunchApp == true) {
+      final payload = launchDetails!.notificationResponse?.payload;
+      if (payload != null && payload.startsWith('survey:')) {
+        initialPayload = payload;
+      }
+    }
+
+    // Pre-create notification channels
+    final androidPlugin = _plugin
+        .resolvePlatformSpecificImplementation<
             AndroidFlutterLocalNotificationsPlugin>();
     if (androidPlugin != null) {
       await androidPlugin.createNotificationChannel(
@@ -37,23 +57,10 @@ class NotificationService {
     }
   }
 
-  /// Shows a "Trip Detected" notification that nudges the user to log trip details.
-  static Future<void> showTripDetectedNotification() async {
-    const androidDetails = AndroidNotificationDetails(
-      'trip_detection_channel',
-      'Trip Detection',
-      channelDescription: 'Notifications when a trip is detected',
-      importance: Importance.high,
-      priority: Priority.high,
-    );
-
-    const details = NotificationDetails(android: androidDetails);
-
-    await _plugin.show(
-      0,
-      'Trip Detected',
-      'It looks like you are travelling. Tap to log your trip details.',
-      details,
-    );
+  static void _onNotificationTap(NotificationResponse response) {
+    final payload = response.payload;
+    if (payload != null && payload.startsWith('survey:')) {
+      onNotificationTap.add(payload);
+    }
   }
 }

@@ -14,7 +14,6 @@ const int locationCheckIntervalSec = 15;
 class BackgroundLocationService {
   static final FlutterBackgroundService _service = FlutterBackgroundService();
 
-  /// Initializes and configures the background service.
   static Future<void> initialize() async {
     await _service.configure(
       iosConfiguration: IosConfiguration(
@@ -47,14 +46,13 @@ class BackgroundLocationService {
       _service.on('locationUpdate');
 }
 
-/// Entry point for the background service — runs in an isolate.
 @pragma('vm:entry-point')
 Future<void> _onStart(ServiceInstance service) async {
   DartPluginRegistrant.ensureInitialized();
 
   bool isTripActive = false;
+  DateTime? tripStartTime;
 
-  // Initialize notifications directly in the isolate
   final notifPlugin = FlutterLocalNotificationsPlugin();
   await notifPlugin.initialize(
     const InitializationSettings(
@@ -74,9 +72,8 @@ Future<void> _onStart(ServiceInstance service) async {
         ),
       );
 
-      final speed = position.speed; // m/s
+      final speed = position.speed;
 
-      // Send location data back to the UI
       service.invoke('locationUpdate', {
         'latitude': position.latitude,
         'longitude': position.longitude,
@@ -84,11 +81,14 @@ Future<void> _onStart(ServiceInstance service) async {
         'speedKmh': speed * 3.6,
         'timestamp': position.timestamp.toIso8601String(),
         'isTripActive': speed > speedThresholdMps,
+        'tripStartTime': tripStartTime?.toIso8601String(),
       });
 
-      // Trip detection: speed exceeds threshold
       if (speed > speedThresholdMps && !isTripActive) {
+        // Trip just started
         isTripActive = true;
+        tripStartTime = DateTime.now();
+
         await notifPlugin.show(
           0,
           'Trip Detected',
@@ -102,12 +102,33 @@ Future<void> _onStart(ServiceInstance service) async {
               priority: Priority.high,
             ),
           ),
+          payload: 'survey:${tripStartTime!.toIso8601String()}',
         );
-      } else if (speed <= speedThresholdMps) {
+      } else if (speed <= speedThresholdMps && isTripActive) {
+        // Trip just ended
         isTripActive = false;
+        final tripEndTime = DateTime.now();
+
+        await notifPlugin.show(
+          1,
+          'Trip Ended',
+          'Your trip has ended. Tap to complete the survey.',
+          const NotificationDetails(
+            android: AndroidNotificationDetails(
+              'trip_detection_channel',
+              'Trip Detection',
+              channelDescription: 'Notifications when a trip is detected',
+              importance: Importance.high,
+              priority: Priority.high,
+            ),
+          ),
+          payload:
+              'survey:${tripStartTime?.toIso8601String() ?? tripEndTime.toIso8601String()},${tripEndTime.toIso8601String()}',
+        );
+        tripStartTime = null;
       }
     } catch (e) {
-      // Silently handle — location may be temporarily unavailable
+      // Location may be temporarily unavailable
     }
   });
 }
