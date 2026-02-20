@@ -52,6 +52,8 @@ Future<void> _onStart(ServiceInstance service) async {
 
   bool isTripActive = false;
   DateTime? tripStartTime;
+  double? tripStartLat;
+  double? tripStartLng;
 
   final notifPlugin = FlutterLocalNotificationsPlugin();
   await notifPlugin.initialize(
@@ -85,29 +87,32 @@ Future<void> _onStart(ServiceInstance service) async {
       });
 
       if (speed > speedThresholdMps && !isTripActive) {
-        // Trip just started
+        // Trip just started — capture time and location
         isTripActive = true;
         tripStartTime = DateTime.now();
+        tripStartLat = position.latitude;
+        tripStartLng = position.longitude;
 
         await notifPlugin.show(
           0,
           'Trip Detected',
-          'It looks like you are travelling. Tap to log your trip details.',
+          'You seem to be travelling. We\'ll ask for details when you stop.',
           const NotificationDetails(
             android: AndroidNotificationDetails(
               'trip_detection_channel',
               'Trip Detection',
               channelDescription: 'Notifications when a trip is detected',
-              importance: Importance.high,
-              priority: Priority.high,
+              importance: Importance.defaultImportance,
+              priority: Priority.defaultPriority,
             ),
           ),
-          payload: 'survey:${tripStartTime!.toIso8601String()}',
         );
       } else if (speed <= speedThresholdMps && isTripActive) {
-        // Trip just ended
+        // Trip just ended — capture end time and location
         isTripActive = false;
         final tripEndTime = DateTime.now();
+        final tripEndLat = position.latitude;
+        final tripEndLng = position.longitude;
 
         await notifPlugin.show(
           1,
@@ -123,9 +128,11 @@ Future<void> _onStart(ServiceInstance service) async {
             ),
           ),
           payload:
-              'survey:${tripStartTime?.toIso8601String() ?? tripEndTime.toIso8601String()},${tripEndTime.toIso8601String()}',
+              'survey:${tripStartTime?.toIso8601String() ?? tripEndTime.toIso8601String()},${tripEndTime.toIso8601String()},${tripStartLat},${tripStartLng},${tripEndLat},${tripEndLng}',
         );
         tripStartTime = null;
+        tripStartLat = null;
+        tripStartLng = null;
       }
     } catch (e) {
       // Location may be temporarily unavailable

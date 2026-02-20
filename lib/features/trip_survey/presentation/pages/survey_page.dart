@@ -3,16 +3,24 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../data/models/trip_survey_model.dart';
-import '../../data/services/survey_storage_service.dart';
+import '../providers/survey_provider.dart';
 
 class SurveyPage extends ConsumerStatefulWidget {
   final String? tripStartTime;
   final String? tripEndTime;
+  final double? startLat;
+  final double? startLng;
+  final double? endLat;
+  final double? endLng;
 
   const SurveyPage({
     super.key,
     this.tripStartTime,
     this.tripEndTime,
+    this.startLat,
+    this.startLng,
+    this.endLat,
+    this.endLng,
   });
 
   @override
@@ -25,6 +33,7 @@ class _SurveyPageState extends ConsumerState<SurveyPage> {
   String _tripPurpose = 'work';
   String _modeOfTransport = 'bus';
   int _numberOfPassengers = 1;
+  bool _isSubmitting = false;
 
   static const tripPurposeOptions = [
     'work',
@@ -43,7 +52,9 @@ class _SurveyPageState extends ConsumerState<SurveyPage> {
   ];
 
   Future<void> _submitSurvey() async {
-    if (!_formKey.currentState!.validate()) return;
+    if (!_formKey.currentState!.validate() || _isSubmitting) return;
+
+    setState(() => _isSubmitting = true);
 
     final now = DateTime.now();
     final survey = TripSurveyModel(
@@ -58,13 +69,23 @@ class _SurveyPageState extends ConsumerState<SurveyPage> {
       modeOfTransport: _modeOfTransport,
       numberOfPassengers: _numberOfPassengers,
       surveyCompletedAt: now,
+      startLat: widget.startLat,
+      startLng: widget.startLng,
+      endLat: widget.endLat,
+      endLng: widget.endLng,
     );
 
-    await SurveyStorageService.saveSurvey(survey);
+    // Save locally + sync to MongoDB via provider
+    final sent = await ref.read(surveyProvider.notifier).submitSurvey(survey);
 
     if (mounted) {
+      setState(() => _isSubmitting = false);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Survey submitted. Thank you!')),
+        SnackBar(
+          content: Text(sent
+              ? 'Survey submitted successfully!'
+              : 'Saved locally. Will sync when server is available.'),
+        ),
       );
       context.go('/');
     }
@@ -160,9 +181,18 @@ class _SurveyPageState extends ConsumerState<SurveyPage> {
 
               // Submit
               FilledButton.icon(
-                onPressed: _submitSurvey,
-                icon: const Icon(Icons.check),
-                label: const Text('Submit Survey'),
+                onPressed: _isSubmitting ? null : _submitSurvey,
+                icon: _isSubmitting
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : const Icon(Icons.check),
+                label: Text(_isSubmitting ? 'Submitting...' : 'Submit Survey'),
               ),
             ],
           ),

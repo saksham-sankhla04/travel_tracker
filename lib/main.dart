@@ -46,15 +46,31 @@ class _TravelTrackerAppState extends State<TravelTrackerApp> {
   void _navigateFromPayload(String payload) {
     if (!payload.startsWith('survey:')) return;
     final data = payload.substring('survey:'.length);
+    // Format: startTime,endTime,startLat,startLng,endLat,endLng
     final parts = data.split(',');
-    final startTime = parts[0];
-    final endTime = parts.length > 1 ? parts[1] : null;
 
-    var uri = '/survey?startTime=$startTime';
-    if (endTime != null) {
-      uri += '&endTime=$endTime';
+    final params = <String, String>{};
+    if (parts.isNotEmpty && parts[0].isNotEmpty) {
+      params['startTime'] = parts[0];
     }
-    appRouter.go(uri);
+    if (parts.length > 1 && parts[1].isNotEmpty) {
+      params['endTime'] = parts[1];
+    }
+    if (parts.length > 2 && parts[2].isNotEmpty) {
+      params['startLat'] = parts[2];
+    }
+    if (parts.length > 3 && parts[3].isNotEmpty) {
+      params['startLng'] = parts[3];
+    }
+    if (parts.length > 4 && parts[4].isNotEmpty) {
+      params['endLat'] = parts[4];
+    }
+    if (parts.length > 5 && parts[5].isNotEmpty) {
+      params['endLng'] = parts[5];
+    }
+
+    final query = params.entries.map((e) => '${e.key}=${e.value}').join('&');
+    appRouter.go('/survey?$query');
   }
 
   @override
