@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Travel Tracker - Admin Dashboard</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="css/dashboard.css" />
+</head>
+<body>
+
+  <header class="header">
+    <div class="header-content">
+      <div>
+        <h1>Travel Tracker</h1>
+        <p class="subtitle">KSCSTE Research Dashboard</p>
+      </div>
+      <button id="refresh-btn" class="refresh-btn" title="Refresh data">&#x21bb; Refresh</button>
+    </div>
+  </header>
+
+  <main class="container">
+
+    <!-- Overview Cards -->
+    <section class="cards-section">
+      <div class="card">
+        <h3>Total Trips</h3>
+        <p id="stat-total" class="card-value">--</p>
+      </div>
+      <div class="card">
+        <h3>Avg. Passengers</h3>
+        <p id="stat-avg-passengers" class="card-value">--</p>
+      </div>
+      <div class="card">
+        <h3>Avg. Duration</h3>
+        <p id="stat-avg-duration" class="card-value">--</p>
+      </div>
+      <div class="card">
+        <h3>Last Updated</h3>
+        <p id="stat-last-updated" class="card-value">--</p>
+      </div>
+    </section>
+
+    <!-- Charts -->
+    <section class="charts-section">
+      <div class="chart-container">
+        <h3>Trips by Purpose</h3>
+        <canvas id="purpose-chart"></canvas>
+      </div>
+      <div class="chart-container">
+        <h3>Trips by Transport Mode</h3>
+        <canvas id="transport-chart"></canvas>
+      </div>
+      <div class="chart-container">
+        <h3>Trips Over Time</h3>
+        <canvas id="timeline-chart"></canvas>
+      </div>
+    </section>
+
+    <!-- Map -->
+    <section class="map-section">
+      <h3>Trip Locations</h3>
+      <div id="map"></div>
+    </section>
+
+    <!-- Recent Trips Table -->
+    <section class="table-section">
+      <h3>Recent Trips</h3>
+      <div class="table-wrapper">
+        <table id="trips-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Date</th>
+              <th>Start</th>
+              <th>End</th>
+              <th>Duration</th>
+              <th>Purpose</th>
+              <th>Transport</th>
+              <th>Passengers</th>
+              <th>Location</th>
+            </tr>
+          </thead>
+          <tbody id="trips-tbody"></tbody>
+        </table>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="footer">
+    <p>Travel Tracker &mdash; KSCSTE Final Year Project</p>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="js/charts.js"></script>
+  <script src="js/map.js"></script>
+  <script src="js/table.js"></script>
+  <script src="js/dashboard.js"></script>
+</body>
+</html>

@@ -33,17 +33,54 @@ router.get('/', async (req, res) => {
   }
 });
 
-// GET /api/trips/stats — basic analytics
+// GET /api/trips/stats — analytics for admin dashboard
 router.get('/stats', async (req, res) => {
   try {
     const total = await Trip.countDocuments();
+
     const byPurpose = await Trip.aggregate([
       { $group: { _id: '$tripPurpose', count: { $sum: 1 } } },
     ]);
+
     const byTransport = await Trip.aggregate([
       { $group: { _id: '$modeOfTransport', count: { $sum: 1 } } },
     ]);
-    res.json({ total, byPurpose, byTransport });
+
+    const avgResult = await Trip.aggregate([
+      { $group: { _id: null, avgPassengers: { $avg: '$numberOfPassengers' } } },
+    ]);
+    const avgPassengers = avgResult.length > 0
+      ? Math.round(avgResult[0].avgPassengers * 10) / 10
+      : 0;
+
+    const tripsPerDay = await Trip.aggregate([
+      {
+        $group: {
+          _id: { $dateToString: { format: '%Y-%m-%d', date: '$tripStartTime' } },
+          count: { $sum: 1 },
+        },
+      },
+      { $sort: { _id: 1 } },
+    ]);
+
+    const durationResult = await Trip.aggregate([
+      {
+        $project: {
+          durationMinutes: {
+            $divide: [
+              { $subtract: ['$tripEndTime', '$tripStartTime'] },
+              60000,
+            ],
+          },
+        },
+      },
+      { $group: { _id: null, avgDuration: { $avg: '$durationMinutes' } } },
+    ]);
+    const avgTripDurationMinutes = durationResult.length > 0
+      ? Math.round(durationResult[0].avgDuration * 10) / 10
+      : 0;
+
+    res.json({ total, byPurpose, byTransport, avgPassengers, avgTripDurationMinutes, tripsPerDay });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

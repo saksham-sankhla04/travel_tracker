@@ -99,9 +99,9 @@ class _HomePageState extends ConsumerState<HomePage> {
   Future<void> _simulateTrip(BuildContext context) async {
     final plugin = FlutterLocalNotificationsPlugin();
     final tripStart = DateTime.now();
-    // Simulated start location (Thiruvananthapuram)
-    const startLat = 8.5241;
-    const startLng = 76.9366;
+    // Simulated start location (Jodhpur)
+    const startLat = 26.2389;
+    const startLng = 73.0243;
 
     // Fire informational "Trip Detected" notification (no survey payload)
     await plugin.show(
@@ -122,9 +122,9 @@ class _HomePageState extends ConsumerState<HomePage> {
     // After 5 seconds, fire "Trip Ended" notification
     await Future.delayed(const Duration(seconds: 5));
     final tripEnd = DateTime.now();
-    // Simulated end location (Kochi)
-    const endLat = 9.9312;
-    const endLng = 76.2673;
+    // Simulated end location (Jaipur)
+    const endLat = 26.9124;
+    const endLng = 75.7873;
     await plugin.show(
       1,
       'Trip Ended',

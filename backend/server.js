@@ -1,5 +1,6 @@
 require('dotenv').config();
 const express = require('express');
+const path = require('path');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const tripRoutes = require('./routes/trips');
@@ -10,11 +11,14 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
+// Serve admin dashboard static files
+app.use(express.static(path.join(__dirname, 'public')));
+
 // Routes
 app.use('/api/trips', tripRoutes);
 
 // Health check
-app.get('/', (req, res) => {
+app.get('/api/health', (req, res) => {
   res.json({ status: 'Travel Tracker API running' });
 });
 
