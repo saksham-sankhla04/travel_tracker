@@ -45,4 +45,45 @@ class SurveyStorageService {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_storageKey);
   }
+
+  // --- Pending trip (written by background service, read by foreground) ---
+
+  static const String _pendingTripKey = 'pending_trip';
+
+  /// Save pending trip data so the app can show the survey on next open.
+  static Future<void> savePendingTrip({
+    required String startTime,
+    required String endTime,
+    required double startLat,
+    required double startLng,
+    required double endLat,
+    required double endLng,
+  }) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(
+      _pendingTripKey,
+      jsonEncode({
+        'startTime': startTime,
+        'endTime': endTime,
+        'startLat': startLat,
+        'startLng': startLng,
+        'endLat': endLat,
+        'endLng': endLng,
+      }),
+    );
+  }
+
+  /// Returns pending trip data if available, or null.
+  static Future<Map<String, dynamic>?> getPendingTrip() async {
+    final prefs = await SharedPreferences.getInstance();
+    final raw = prefs.getString(_pendingTripKey);
+    if (raw == null) return null;
+    return jsonDecode(raw) as Map<String, dynamic>;
+  }
+
+  /// Clear pending trip (call after survey is submitted).
+  static Future<void> clearPendingTrip() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_pendingTripKey);
+  }
 }

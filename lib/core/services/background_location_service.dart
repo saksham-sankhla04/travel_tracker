@@ -4,6 +4,7 @@ import 'dart:ui';
 import 'package:flutter_background_service/flutter_background_service.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 /// Speed threshold in m/s. 10 km/h = ~2.78 m/s.
 const double speedThresholdMps = 2.78;
@@ -130,6 +131,12 @@ Future<void> _onStart(ServiceInstance service) async {
           payload:
               'survey:${tripStartTime?.toIso8601String() ?? tripEndTime.toIso8601String()},${tripEndTime.toIso8601String()},${tripStartLat},${tripStartLng},${tripEndLat},${tripEndLng}',
         );
+
+        // Persist pending trip so the survey shows even if user opens app directly
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('pending_trip',
+            '{"startTime":"${tripStartTime?.toIso8601String() ?? tripEndTime.toIso8601String()}","endTime":"${tripEndTime.toIso8601String()}","startLat":$tripStartLat,"startLng":$tripStartLng,"endLat":$tripEndLat,"endLng":$tripEndLng}');
+
         tripStartTime = null;
         tripStartLat = null;
         tripStartLng = null;

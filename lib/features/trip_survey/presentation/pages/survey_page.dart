@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../data/models/trip_survey_model.dart';
+import '../../data/services/survey_storage_service.dart';
 import '../providers/survey_provider.dart';
 
 class SurveyPage extends ConsumerStatefulWidget {
@@ -77,6 +78,9 @@ class _SurveyPageState extends ConsumerState<SurveyPage> {
 
     // Save locally + sync to MongoDB via provider
     final sent = await ref.read(surveyProvider.notifier).submitSurvey(survey);
+
+    // Clear pending trip so home page won't redirect here again
+    await SurveyStorageService.clearPendingTrip();
 
     if (mounted) {
       setState(() => _isSubmitting = false);

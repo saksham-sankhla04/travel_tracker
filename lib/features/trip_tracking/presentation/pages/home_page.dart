@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/router/app_router.dart';
 import '../../../../core/services/permission_service.dart';
+import '../../../trip_survey/data/services/survey_storage_service.dart';
 import '../../../trip_survey/presentation/providers/survey_provider.dart';
 import '../providers/trip_tracking_provider.dart';
 import '../widgets/permission_card.dart';
@@ -20,14 +22,30 @@ class _HomePageState extends ConsumerState<HomePage> {
   @override
   void initState() {
     super.initState();
-    // Sync any locally-saved surveys that haven't reached MongoDB yet
     Future.microtask(() async {
+      // Sync any locally-saved surveys that haven't reached MongoDB yet
       final count =
           await ref.read(surveyProvider.notifier).syncPendingSurveys();
       if (count > 0 && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Synced $count pending survey(s) to server.')),
         );
+      }
+
+      // Check if there's a pending trip that needs a survey
+      if (!mounted) return;
+      final pending = await SurveyStorageService.getPendingTrip();
+      if (pending != null && mounted) {
+        final startTime = pending['startTime'] as String;
+        final endTime = pending['endTime'] as String;
+        final startLat = pending['startLat'];
+        final startLng = pending['startLng'];
+        final endLat = pending['endLat'];
+        final endLng = pending['endLng'];
+        final query = 'startTime=$startTime&endTime=$endTime'
+            '&startLat=$startLat&startLng=$startLng'
+            '&endLat=$endLat&endLng=$endLng';
+        appRouter.go('/survey?$query');
       }
     });
   }
@@ -122,6 +140,16 @@ class _HomePageState extends ConsumerState<HomePage> {
       ),
       payload:
           'survey:${tripStart.toIso8601String()},${tripEnd.toIso8601String()},$startLat,$startLng,$endLat,$endLng',
+    );
+
+    // Persist pending trip so the survey shows even if user opens app directly
+    await SurveyStorageService.savePendingTrip(
+      startTime: tripStart.toIso8601String(),
+      endTime: tripEnd.toIso8601String(),
+      startLat: startLat,
+      startLng: startLng,
+      endLat: endLat,
+      endLng: endLng,
     );
   }
 }
