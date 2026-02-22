@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../core/router/app_router.dart';
 import '../../../../core/services/permission_service.dart';
@@ -82,7 +83,16 @@ class _HomePageState extends ConsumerState<HomePage> {
               LiveDataCard(
                 currentSpeed: state.currentSpeed,
                 isTripActive: state.isTripActive,
+                gpsAccuracy: state.gpsAccuracy,
+                isCoolingDown: state.isCoolingDown,
+                cooldownProgress: state.cooldownProgress,
               ),
+            const SizedBox(height: 16),
+            FilledButton.tonalIcon(
+              onPressed: () => context.push('/history'),
+              icon: const Icon(Icons.history),
+              label: const Text('Trip History'),
+            ),
             const SizedBox(height: 16),
             // Debug: simulate a trip for testing
             OutlinedButton.icon(

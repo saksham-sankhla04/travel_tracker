@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
 class ApiService {
@@ -7,8 +8,10 @@ class ApiService {
 
   static Future<bool> submitTrip(Map<String, dynamic> tripData) async {
     try {
-      print('[ApiService] POST $baseUrl/api/trips');
-      print('[ApiService] Body: ${jsonEncode(tripData)}');
+      if (kDebugMode) {
+        debugPrint('[ApiService] POST $baseUrl/api/trips');
+        debugPrint('[ApiService] Body: ${jsonEncode(tripData)}');
+      }
       final response = await http
           .post(
             Uri.parse('$baseUrl/api/trips'),
@@ -16,10 +19,14 @@ class ApiService {
             body: jsonEncode(tripData),
           )
           .timeout(const Duration(seconds: 10));
-      print('[ApiService] Response: ${response.statusCode} ${response.body}');
+      if (kDebugMode) {
+        debugPrint('[ApiService] Response: ${response.statusCode} ${response.body}');
+      }
       return response.statusCode == 201;
     } catch (e) {
-      print('[ApiService] ERROR: $e');
+      if (kDebugMode) {
+        debugPrint('[ApiService] ERROR: $e');
+      }
       return false;
     }
   }

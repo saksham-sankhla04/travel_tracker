@@ -10,6 +10,9 @@ class TripTrackingState {
   final bool serviceRunning;
   final double currentSpeed;
   final bool isTripActive;
+  final double gpsAccuracy;
+  final bool isCoolingDown;
+  final double cooldownProgress;
 
   const TripTrackingState({
     this.permissionsGranted = false,
@@ -17,6 +20,9 @@ class TripTrackingState {
     this.serviceRunning = false,
     this.currentSpeed = 0.0,
     this.isTripActive = false,
+    this.gpsAccuracy = 0.0,
+    this.isCoolingDown = false,
+    this.cooldownProgress = 0.0,
   });
 
   TripTrackingState copyWith({
@@ -25,6 +31,9 @@ class TripTrackingState {
     bool? serviceRunning,
     double? currentSpeed,
     bool? isTripActive,
+    double? gpsAccuracy,
+    bool? isCoolingDown,
+    double? cooldownProgress,
   }) {
     return TripTrackingState(
       permissionsGranted: permissionsGranted ?? this.permissionsGranted,
@@ -32,6 +41,9 @@ class TripTrackingState {
       serviceRunning: serviceRunning ?? this.serviceRunning,
       currentSpeed: currentSpeed ?? this.currentSpeed,
       isTripActive: isTripActive ?? this.isTripActive,
+      gpsAccuracy: gpsAccuracy ?? this.gpsAccuracy,
+      isCoolingDown: isCoolingDown ?? this.isCoolingDown,
+      cooldownProgress: cooldownProgress ?? this.cooldownProgress,
     );
   }
 }
@@ -79,6 +91,9 @@ class TripTrackingNotifier extends StateNotifier<TripTrackingState> {
         state = state.copyWith(
           currentSpeed: (data['speedKmh'] as num).toDouble(),
           isTripActive: data['isTripActive'] as bool,
+          gpsAccuracy: (data['accuracy'] as num?)?.toDouble() ?? 0.0,
+          isCoolingDown: data['isCoolingDown'] as bool? ?? false,
+          cooldownProgress: (data['cooldownProgress'] as num?)?.toDouble() ?? 0.0,
         );
       }
     });

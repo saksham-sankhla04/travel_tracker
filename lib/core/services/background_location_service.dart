@@ -6,11 +6,19 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-/// Speed threshold in m/s. 10 km/h = ~2.78 m/s.
+/// Speed threshold for trip START in m/s. 10 km/h = ~2.78 m/s.
 const double speedThresholdMps = 2.78;
+
+/// Speed threshold for trip END in m/s. 5 km/h = ~1.39 m/s.
+/// Lower than start threshold to create hysteresis and avoid toggling.
+const double tripEndSpeedThresholdMps = 1.39;
 
 /// How often to check location (in seconds).
 const int locationCheckIntervalSec = 15;
+
+/// Consecutive low-speed readings required before trip ends.
+/// At 15-second intervals, 20 readings = 5 minutes.
+const int cooldownReadingsRequired = 20;
 
 class BackgroundLocationService {
   static final FlutterBackgroundService _service = FlutterBackgroundService();
@@ -56,6 +64,12 @@ Future<void> _onStart(ServiceInstance service) async {
   double? tripStartLat;
   double? tripStartLng;
 
+  // Cooldown state for robust trip-end detection
+  int lowSpeedReadingCount = 0;
+  DateTime? cooldownStartTime;
+  double? cooldownStartLat;
+  double? cooldownStartLng;
+
   final notifPlugin = FlutterLocalNotificationsPlugin();
   await notifPlugin.initialize(
     const InitializationSettings(
@@ -83,16 +97,30 @@ Future<void> _onStart(ServiceInstance service) async {
         'speed': speed,
         'speedKmh': speed * 3.6,
         'timestamp': position.timestamp.toIso8601String(),
-        'isTripActive': speed > speedThresholdMps,
+        'isTripActive': isTripActive,
         'tripStartTime': tripStartTime?.toIso8601String(),
+        'isCoolingDown': isTripActive && lowSpeedReadingCount > 0,
+        'cooldownProgress': isTripActive
+            ? lowSpeedReadingCount / cooldownReadingsRequired
+            : 0.0,
+        'accuracy': position.accuracy,
       });
 
+      // Skip trip detection when GPS accuracy is very poor (>50m)
+      if (position.accuracy > 50) return;
+
       if (speed > speedThresholdMps && !isTripActive) {
-        // Trip just started — capture time and location
+        // ---- TRIP START (unchanged) ----
         isTripActive = true;
         tripStartTime = DateTime.now();
         tripStartLat = position.latitude;
         tripStartLng = position.longitude;
+
+        // Reset any lingering cooldown state
+        lowSpeedReadingCount = 0;
+        cooldownStartTime = null;
+        cooldownStartLat = null;
+        cooldownStartLng = null;
 
         await notifPlugin.show(
           0,
@@ -108,38 +136,66 @@ Future<void> _onStart(ServiceInstance service) async {
             ),
           ),
         );
-      } else if (speed <= speedThresholdMps && isTripActive) {
-        // Trip just ended — capture end time and location
-        isTripActive = false;
-        final tripEndTime = DateTime.now();
-        final tripEndLat = position.latitude;
-        final tripEndLng = position.longitude;
+      } else if (isTripActive) {
+        // ---- DURING AN ACTIVE TRIP ----
+        if (speed <= tripEndSpeedThresholdMps) {
+          // Low speed reading — increment cooldown counter
+          lowSpeedReadingCount++;
 
-        await notifPlugin.show(
-          1,
-          'Trip Ended',
-          'Your trip has ended. Tap to complete the survey.',
-          const NotificationDetails(
-            android: AndroidNotificationDetails(
-              'trip_detection_channel',
-              'Trip Detection',
-              channelDescription: 'Notifications when a trip is detected',
-              importance: Importance.high,
-              priority: Priority.high,
-            ),
-          ),
-          payload:
-              'survey:${tripStartTime?.toIso8601String() ?? tripEndTime.toIso8601String()},${tripEndTime.toIso8601String()},${tripStartLat},${tripStartLng},${tripEndLat},${tripEndLng}',
-        );
+          if (lowSpeedReadingCount == 1) {
+            // First low-speed reading: capture where they stopped
+            cooldownStartTime = DateTime.now();
+            cooldownStartLat = position.latitude;
+            cooldownStartLng = position.longitude;
+          }
 
-        // Persist pending trip so the survey shows even if user opens app directly
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setString('pending_trip',
-            '{"startTime":"${tripStartTime?.toIso8601String() ?? tripEndTime.toIso8601String()}","endTime":"${tripEndTime.toIso8601String()}","startLat":$tripStartLat,"startLng":$tripStartLng,"endLat":$tripEndLat,"endLng":$tripEndLng}');
+          if (lowSpeedReadingCount >= cooldownReadingsRequired) {
+            // ---- TRIP END (sustained low speed for ~5 minutes) ----
+            isTripActive = false;
 
-        tripStartTime = null;
-        tripStartLat = null;
-        tripStartLng = null;
+            // Use coordinates from when low speed FIRST started
+            final tripEndTime = cooldownStartTime!;
+            final tripEndLat = cooldownStartLat!;
+            final tripEndLng = cooldownStartLng!;
+
+            await notifPlugin.show(
+              1,
+              'Trip Ended',
+              'Your trip has ended. Tap to complete the survey.',
+              const NotificationDetails(
+                android: AndroidNotificationDetails(
+                  'trip_detection_channel',
+                  'Trip Detection',
+                  channelDescription: 'Notifications when a trip is detected',
+                  importance: Importance.high,
+                  priority: Priority.high,
+                ),
+              ),
+              payload:
+                  'survey:${tripStartTime?.toIso8601String() ?? tripEndTime.toIso8601String()},${tripEndTime.toIso8601String()},${tripStartLat},${tripStartLng},${tripEndLat},${tripEndLng}',
+            );
+
+            // Persist pending trip so the survey shows even if user opens app directly
+            final prefs = await SharedPreferences.getInstance();
+            await prefs.setString('pending_trip',
+                '{"startTime":"${tripStartTime?.toIso8601String() ?? tripEndTime.toIso8601String()}","endTime":"${tripEndTime.toIso8601String()}","startLat":$tripStartLat,"startLng":$tripStartLng,"endLat":$tripEndLat,"endLng":$tripEndLng}');
+
+            // Reset all state
+            tripStartTime = null;
+            tripStartLat = null;
+            tripStartLng = null;
+            lowSpeedReadingCount = 0;
+            cooldownStartTime = null;
+            cooldownStartLat = null;
+            cooldownStartLng = null;
+          }
+        } else {
+          // Speed picked back up during cooldown — reset the counter
+          lowSpeedReadingCount = 0;
+          cooldownStartTime = null;
+          cooldownStartLat = null;
+          cooldownStartLng = null;
+        }
       }
     } catch (e) {
       // Location may be temporarily unavailable

@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../features/trip_tracking/presentation/pages/home_page.dart';
 import '../../features/trip_survey/presentation/pages/survey_page.dart';
+import '../../features/trip_survey/presentation/pages/trip_history_page.dart';
 
 final rootNavigatorKey = GlobalKey<NavigatorState>();
 
@@ -27,6 +28,10 @@ final appRouter = GoRouter(
           endLng: double.tryParse(params['endLng'] ?? ''),
         );
       },
+    ),
+    GoRoute(
+      path: '/history',
+      builder: (context, state) => const TripHistoryPage(),
     ),
   ],
 );

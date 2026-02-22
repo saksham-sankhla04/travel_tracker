@@ -37,9 +37,9 @@ function renderTripsMap(trips) {
     if (trip.startLat == null || trip.startLng == null) return;
     if (trip.endLat == null || trip.endLng == null) return;
 
-    // Only show trips where start and end are at least 7km apart
+    // Only show trips where start and end are at least 2km apart
     var dist = haversineKm(trip.startLat, trip.startLng, trip.endLat, trip.endLng);
-    if (dist < 7) return;
+    if (dist < 2) return;
 
     var startLatLng = [trip.startLat, trip.startLng];
     var endLatLng = [trip.endLat, trip.endLng];
