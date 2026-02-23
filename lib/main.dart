@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/services/notification_service.dart';
 import 'core/services/background_location_service.dart';
 import 'core/router/app_router.dart';
+import 'features/trip_survey/data/services/survey_storage_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -43,7 +44,7 @@ class _TravelTrackerAppState extends State<TravelTrackerApp> {
     });
   }
 
-  void _navigateFromPayload(String payload) {
+  Future<void> _navigateFromPayload(String payload) async {
     if (!payload.startsWith('survey:')) return;
     final data = payload.substring('survey:'.length);
     // Format: startTime,endTime,startLat,startLng,endLat,endLng
@@ -69,8 +70,21 @@ class _TravelTrackerAppState extends State<TravelTrackerApp> {
       params['endLng'] = parts[5];
     }
 
+    // Read route points from pending trip in SharedPreferences
+    final pending = await SurveyStorageService.getPendingTrip();
+    List<Map<String, double>>? routePoints;
+    if (pending != null) {
+      final rawPoints = pending['routePoints'] as List<dynamic>?;
+      routePoints = rawPoints
+          ?.map((p) => {
+                'lat': (p['lat'] as num).toDouble(),
+                'lng': (p['lng'] as num).toDouble(),
+              })
+          .toList();
+    }
+
     final query = params.entries.map((e) => '${e.key}=${e.value}').join('&');
-    appRouter.go('/survey?$query');
+    appRouter.go('/survey?$query', extra: {'routePoints': routePoints});
   }
 
   @override

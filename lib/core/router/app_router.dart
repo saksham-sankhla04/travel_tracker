@@ -19,6 +19,7 @@ final appRouter = GoRouter(
       path: '/survey',
       builder: (context, state) {
         final params = state.uri.queryParameters;
+        final extra = state.extra as Map<String, dynamic>?;
         return SurveyPage(
           tripStartTime: params['startTime'],
           tripEndTime: params['endTime'],
@@ -26,6 +27,7 @@ final appRouter = GoRouter(
           startLng: double.tryParse(params['startLng'] ?? ''),
           endLat: double.tryParse(params['endLat'] ?? ''),
           endLng: double.tryParse(params['endLng'] ?? ''),
+          routePoints: extra?['routePoints'] as List<Map<String, double>>?,
         );
       },
     ),

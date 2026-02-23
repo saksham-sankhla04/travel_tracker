@@ -10,6 +10,7 @@ class TripSurveyModel {
   final double? startLng;
   final double? endLat;
   final double? endLng;
+  final List<Map<String, double>>? routePoints;
   final bool isSynced;
 
   const TripSurveyModel({
@@ -24,6 +25,7 @@ class TripSurveyModel {
     this.startLng,
     this.endLat,
     this.endLng,
+    this.routePoints,
     this.isSynced = false,
   });
 
@@ -39,6 +41,7 @@ class TripSurveyModel {
         startLng: startLng,
         endLat: endLat,
         endLng: endLng,
+        routePoints: routePoints,
         isSynced: isSynced ?? this.isSynced,
       );
 
@@ -56,6 +59,7 @@ class TripSurveyModel {
     if (startLng != null) json['startLng'] = startLng;
     if (endLat != null) json['endLat'] = endLat;
     if (endLng != null) json['endLng'] = endLng;
+    if (routePoints != null) json['routePoints'] = routePoints;
     return json;
   }
 
@@ -72,6 +76,7 @@ class TripSurveyModel {
         'startLng': startLng,
         'endLat': endLat,
         'endLng': endLng,
+        'routePoints': routePoints,
         'isSynced': isSynced,
       };
 
@@ -89,6 +94,12 @@ class TripSurveyModel {
         startLng: (json['startLng'] as num?)?.toDouble(),
         endLat: (json['endLat'] as num?)?.toDouble(),
         endLng: (json['endLng'] as num?)?.toDouble(),
+        routePoints: (json['routePoints'] as List<dynamic>?)
+            ?.map((p) => {
+                  'lat': (p['lat'] as num).toDouble(),
+                  'lng': (p['lng'] as num).toDouble(),
+                })
+            .toList(),
         isSynced: json['isSynced'] as bool? ?? false,
       );
 }

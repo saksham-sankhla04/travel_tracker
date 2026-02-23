@@ -58,6 +58,7 @@ class SurveyStorageService {
     required double startLng,
     required double endLat,
     required double endLng,
+    List<Map<String, double>>? routePoints,
   }) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(
@@ -69,6 +70,7 @@ class SurveyStorageService {
         'startLng': startLng,
         'endLat': endLat,
         'endLng': endLng,
+        'routePoints': routePoints,
       }),
     );
   }

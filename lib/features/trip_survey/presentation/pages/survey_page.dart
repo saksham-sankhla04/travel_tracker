@@ -13,6 +13,7 @@ class SurveyPage extends ConsumerStatefulWidget {
   final double? startLng;
   final double? endLat;
   final double? endLng;
+  final List<Map<String, double>>? routePoints;
 
   const SurveyPage({
     super.key,
@@ -22,6 +23,7 @@ class SurveyPage extends ConsumerStatefulWidget {
     this.startLng,
     this.endLat,
     this.endLng,
+    this.routePoints,
   });
 
   @override
@@ -74,6 +76,7 @@ class _SurveyPageState extends ConsumerState<SurveyPage> {
       startLng: widget.startLng,
       endLat: widget.endLat,
       endLng: widget.endLng,
+      routePoints: widget.routePoints,
     );
 
     // Save locally + sync to MongoDB via provider

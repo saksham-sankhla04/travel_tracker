@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:ui';
 
 import 'package:flutter_background_service/flutter_background_service.dart';
@@ -64,6 +65,9 @@ Future<void> _onStart(ServiceInstance service) async {
   double? tripStartLat;
   double? tripStartLng;
 
+  // Route points collected during the trip
+  List<Map<String, double>> routePoints = [];
+
   // Cooldown state for robust trip-end detection
   int lowSpeedReadingCount = 0;
   DateTime? cooldownStartTime;
@@ -106,17 +110,16 @@ Future<void> _onStart(ServiceInstance service) async {
         'accuracy': position.accuracy,
       });
 
-      // Skip trip detection when GPS accuracy is very poor (>50m)
-      if (position.accuracy > 50) return;
+      // Idle = purely speed-based (no GPS quality check during R&D)
+      final bool isIdle = speed <= tripEndSpeedThresholdMps;
 
+      // ---- TRIP START ----
       if (speed > speedThresholdMps && !isTripActive) {
-        // ---- TRIP START (unchanged) ----
         isTripActive = true;
         tripStartTime = DateTime.now();
         tripStartLat = position.latitude;
         tripStartLng = position.longitude;
-
-        // Reset any lingering cooldown state
+        routePoints = [{'lat': position.latitude, 'lng': position.longitude}];
         lowSpeedReadingCount = 0;
         cooldownStartTime = null;
         cooldownStartLat = null;
@@ -138,22 +141,23 @@ Future<void> _onStart(ServiceInstance service) async {
         );
       } else if (isTripActive) {
         // ---- DURING AN ACTIVE TRIP ----
-        if (speed <= tripEndSpeedThresholdMps) {
-          // Low speed reading — increment cooldown counter
+        // Collect all route points during R&D (no GPS filter)
+        routePoints.add({'lat': position.latitude, 'lng': position.longitude});
+
+        if (isIdle) {
+          // User appears idle — increment cooldown
           lowSpeedReadingCount++;
 
           if (lowSpeedReadingCount == 1) {
-            // First low-speed reading: capture where they stopped
+            // First idle reading: capture where they stopped
             cooldownStartTime = DateTime.now();
             cooldownStartLat = position.latitude;
             cooldownStartLng = position.longitude;
           }
 
           if (lowSpeedReadingCount >= cooldownReadingsRequired) {
-            // ---- TRIP END (sustained low speed for ~5 minutes) ----
+            // ---- TRIP END (idle for ~5 minutes) ----
             isTripActive = false;
-
-            // Use coordinates from when low speed FIRST started
             final tripEndTime = cooldownStartTime!;
             final tripEndLat = cooldownStartLat!;
             final tripEndLng = cooldownStartLng!;
@@ -172,25 +176,32 @@ Future<void> _onStart(ServiceInstance service) async {
                 ),
               ),
               payload:
-                  'survey:${tripStartTime?.toIso8601String() ?? tripEndTime.toIso8601String()},${tripEndTime.toIso8601String()},${tripStartLat},${tripStartLng},${tripEndLat},${tripEndLng}',
+                  'survey:${tripStartTime?.toIso8601String() ?? tripEndTime.toIso8601String()},${tripEndTime.toIso8601String()},$tripStartLat,$tripStartLng,$tripEndLat,$tripEndLng',
             );
 
-            // Persist pending trip so the survey shows even if user opens app directly
             final prefs = await SharedPreferences.getInstance();
-            await prefs.setString('pending_trip',
-                '{"startTime":"${tripStartTime?.toIso8601String() ?? tripEndTime.toIso8601String()}","endTime":"${tripEndTime.toIso8601String()}","startLat":$tripStartLat,"startLng":$tripStartLng,"endLat":$tripEndLat,"endLng":$tripEndLng}');
+            final pendingTrip = {
+              'startTime': tripStartTime?.toIso8601String() ?? tripEndTime.toIso8601String(),
+              'endTime': tripEndTime.toIso8601String(),
+              'startLat': tripStartLat,
+              'startLng': tripStartLng,
+              'endLat': tripEndLat,
+              'endLng': tripEndLng,
+              'routePoints': routePoints,
+            };
+            await prefs.setString('pending_trip', jsonEncode(pendingTrip));
 
-            // Reset all state
             tripStartTime = null;
             tripStartLat = null;
             tripStartLng = null;
+            routePoints = [];
             lowSpeedReadingCount = 0;
             cooldownStartTime = null;
             cooldownStartLat = null;
             cooldownStartLng = null;
           }
         } else {
-          // Speed picked back up during cooldown — reset the counter
+          // User is moving (good GPS + high speed) — reset cooldown
           lowSpeedReadingCount = 0;
           cooldownStartTime = null;
           cooldownStartLat = null;

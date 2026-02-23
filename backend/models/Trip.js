@@ -19,6 +19,10 @@ const tripSchema = new mongoose.Schema({
   startLng: { type: Number },
   endLat: { type: Number },
   endLng: { type: Number },
+  routePoints: [{
+    lat: { type: Number },
+    lng: { type: Number },
+  }],
 }, { timestamps: true });
 
 module.exports = mongoose.model('Trip', tripSchema);

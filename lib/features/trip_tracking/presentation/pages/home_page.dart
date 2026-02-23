@@ -43,10 +43,18 @@ class _HomePageState extends ConsumerState<HomePage> {
         final startLng = pending['startLng'];
         final endLat = pending['endLat'];
         final endLng = pending['endLng'];
+        // Parse route points from pending trip
+        final rawPoints = pending['routePoints'] as List<dynamic>?;
+        final routePoints = rawPoints
+            ?.map((p) => {
+                  'lat': (p['lat'] as num).toDouble(),
+                  'lng': (p['lng'] as num).toDouble(),
+                })
+            .toList();
         final query = 'startTime=$startTime&endTime=$endTime'
             '&startLat=$startLat&startLng=$startLng'
             '&endLat=$endLat&endLng=$endLng';
-        appRouter.go('/survey?$query');
+        appRouter.go('/survey?$query', extra: {'routePoints': routePoints});
       }
     });
   }

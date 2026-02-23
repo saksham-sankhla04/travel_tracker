@@ -86,6 +86,17 @@ router.get('/stats', async (req, res) => {
   }
 });
 
+// DELETE /api/trips/:id — delete a single trip by ID
+router.delete('/:id', async (req, res) => {
+  try {
+    const result = await Trip.findByIdAndDelete(req.params.id);
+    if (!result) return res.status(404).json({ error: 'Trip not found' });
+    res.json({ message: 'Trip deleted', id: req.params.id });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // DELETE /api/trips — delete all trips (for development/testing only)
 router.delete('/', async (req, res) => {
   try {
