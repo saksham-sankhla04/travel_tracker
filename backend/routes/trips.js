@@ -193,10 +193,19 @@ router.get('/stats', async (req, res) => {
     ]);
     const mostCommonPurpose = topPurpose.length > 0 ? topPurpose[0]._id : '';
 
-    // Peak travel hour
+    // Peak travel hour (IST = UTC+5:30)
     const peakResult = await Trip.aggregate([
       ...matchStage,
-      { $project: { hour: { $hour: '$tripStartTime' } } },
+      {
+        $project: {
+          hour: {
+            $mod: [
+              { $add: [{ $hour: '$tripStartTime' }, 5, { $cond: [{ $gte: [{ $minute: '$tripStartTime' }, 30] }, 1, 0] }] },
+              24,
+            ],
+          },
+        },
+      },
       { $group: { _id: '$hour', count: { $sum: 1 } } },
       { $sort: { count: -1 } },
       { $limit: 1 },

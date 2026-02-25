@@ -8,18 +8,10 @@ function renderHeatmap(trips) {
   var heatPoints = [];
 
   trips.forEach(function (trip) {
-    // Add start/end as higher-weight points
-    if (trip.startLat != null && trip.startLng != null) {
-      heatPoints.push([trip.startLat, trip.startLng, 0.6]);
-    }
-    if (trip.endLat != null && trip.endLng != null) {
-      heatPoints.push([trip.endLat, trip.endLng, 0.6]);
-    }
-
-    // Add all route points for density
+    // Only use route points to highlight the path, not start/end
     if (trip.routePoints && trip.routePoints.length > 0) {
       trip.routePoints.forEach(function (p) {
-        heatPoints.push([p.lat, p.lng, 0.3]);
+        heatPoints.push([p.lat, p.lng, 0.5]);
       });
     }
   });
