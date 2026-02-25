@@ -59,4 +59,5 @@ document.addEventListener('DOMContentLoaded', function () {
   fetchAndRender();
   document.getElementById('refresh-btn').addEventListener('click', fetchAndRender);
   initFilters();
+  initMapToggles();
 });
