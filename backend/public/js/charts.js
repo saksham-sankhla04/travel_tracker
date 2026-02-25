@@ -2,20 +2,6 @@ var purposeChart = null;
 var transportChart = null;
 var timelineChart = null;
 
-var LABEL_MAP = {
-  work: 'Work',
-  education: 'Education',
-  shopping: 'Shopping',
-  leisure: 'Leisure',
-  other: 'Other',
-  bus: 'Bus',
-  car: 'Car',
-  bike: 'Bike',
-  auto: 'Auto Rickshaw',
-  train: 'Train',
-  walk: 'Walking',
-};
-
 var PIE_COLORS = [
   '#3498db', '#2ecc71', '#e74c3c', '#f39c12', '#9b59b6', '#1abc9c',
 ];

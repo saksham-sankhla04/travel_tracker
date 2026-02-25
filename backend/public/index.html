@@ -15,29 +15,107 @@
         <h1>Travel Tracker</h1>
         <p class="subtitle">KSCSTE Research Dashboard</p>
       </div>
-      <button id="refresh-btn" class="refresh-btn" title="Refresh data">&#x21bb; Refresh</button>
+      <div class="header-actions">
+        <button id="refresh-btn" class="header-btn" title="Refresh data">&#x21bb; Refresh</button>
+      </div>
     </div>
   </header>
 
   <main class="container">
 
+    <!-- Filter Bar -->
+    <section class="filter-bar">
+      <div class="filter-group">
+        <label for="filter-date-from">From</label>
+        <input type="date" id="filter-date-from" />
+      </div>
+      <div class="filter-group">
+        <label for="filter-date-to">To</label>
+        <input type="date" id="filter-date-to" />
+      </div>
+      <div class="filter-group">
+        <label for="filter-transport">Transport</label>
+        <select id="filter-transport">
+          <option value="">All</option>
+          <option value="bus">Bus</option>
+          <option value="car">Car</option>
+          <option value="bike">Bike</option>
+          <option value="auto">Auto Rickshaw</option>
+          <option value="train">Train</option>
+          <option value="walk">Walking</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label for="filter-purpose">Purpose</label>
+        <select id="filter-purpose">
+          <option value="">All</option>
+          <option value="work">Work</option>
+          <option value="education">Education</option>
+          <option value="shopping">Shopping</option>
+          <option value="leisure">Leisure</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+      <button id="filter-clear" class="filter-clear-btn">Clear</button>
+    </section>
+
     <!-- Overview Cards -->
     <section class="cards-section">
       <div class="card">
-        <h3>Total Trips</h3>
-        <p id="stat-total" class="card-value">--</p>
+        <div class="card-icon" style="background:#3498db22;color:#3498db">&#x1f4ca;</div>
+        <div class="card-body">
+          <h3>Total Trips</h3>
+          <p id="stat-total" class="card-value">--</p>
+        </div>
       </div>
       <div class="card">
-        <h3>Avg. Passengers</h3>
-        <p id="stat-avg-passengers" class="card-value">--</p>
+        <div class="card-icon" style="background:#2ecc7122;color:#2ecc71">&#x1f465;</div>
+        <div class="card-body">
+          <h3>Avg. Passengers</h3>
+          <p id="stat-avg-passengers" class="card-value">--</p>
+        </div>
       </div>
       <div class="card">
-        <h3>Avg. Duration</h3>
-        <p id="stat-avg-duration" class="card-value">--</p>
+        <div class="card-icon" style="background:#f39c1222;color:#f39c12">&#x23f1;</div>
+        <div class="card-body">
+          <h3>Avg. Duration</h3>
+          <p id="stat-avg-duration" class="card-value">--</p>
+        </div>
       </div>
       <div class="card">
-        <h3>Last Updated</h3>
-        <p id="stat-last-updated" class="card-value">--</p>
+        <div class="card-icon" style="background:#9b59b622;color:#9b59b6">&#x1f4cd;</div>
+        <div class="card-body">
+          <h3>Total Distance</h3>
+          <p id="stat-distance" class="card-value">--</p>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-icon" style="background:#1abc9c22;color:#1abc9c">&#x1f698;</div>
+        <div class="card-body">
+          <h3>Top Transport</h3>
+          <p id="stat-top-transport" class="card-value">--</p>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-icon" style="background:#e74c3c22;color:#e74c3c">&#x1f3af;</div>
+        <div class="card-body">
+          <h3>Top Purpose</h3>
+          <p id="stat-top-purpose" class="card-value">--</p>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-icon" style="background:#e67e2222;color:#e67e22">&#x2600;</div>
+        <div class="card-body">
+          <h3>Peak Hour</h3>
+          <p id="stat-peak-hour" class="card-value">--</p>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-icon" style="background:#7f8c8d22;color:#7f8c8d">&#x1f504;</div>
+        <div class="card-body">
+          <h3>Last Updated</h3>
+          <p id="stat-last-updated" class="card-value">--</p>
+        </div>
       </div>
     </section>
 
@@ -59,7 +137,13 @@
 
     <!-- Map -->
     <section class="map-section">
-      <h3>Trip Locations</h3>
+      <div class="map-header">
+        <h3>Trip Locations</h3>
+        <div class="map-toggles">
+          <button id="map-routes-btn" class="map-toggle active">Routes</button>
+          <button id="map-heat-btn" class="map-toggle">Heatmap</button>
+        </div>
+      </div>
       <div id="map"></div>
     </section>
 
@@ -94,9 +178,11 @@
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="js/state.js"></script>
   <script src="js/charts.js"></script>
   <script src="js/map.js"></script>
   <script src="js/table.js"></script>
+  <script src="js/filters.js"></script>
   <script src="js/dashboard.js"></script>
 </body>
 </html>
