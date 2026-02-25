@@ -2,10 +2,22 @@ const express = require('express');
 const Trip = require('../models/Trip');
 const router = express.Router();
 
+// Build MongoDB filter from query params (shared by /api/trips and /api/trips/stats)
+function buildFilter(query) {
+  const filter = {};
+  if (query.from || query.to) {
+    filter.tripStartTime = {};
+    if (query.from) filter.tripStartTime.$gte = new Date(query.from);
+    if (query.to) filter.tripStartTime.$lte = new Date(query.to + 'T23:59:59.999Z');
+  }
+  if (query.transport) filter.modeOfTransport = query.transport;
+  if (query.purpose) filter.tripPurpose = query.purpose;
+  return filter;
+}
+
 // POST /api/trips — save a new trip survey (with duplicate prevention)
 router.post('/', async (req, res) => {
   try {
-    // Check for duplicate: same start time, end time, and completedAt
     const existing = await Trip.findOne({
       tripStartTime: req.body.tripStartTime,
       tripEndTime: req.body.tripEndTime,
@@ -23,30 +35,37 @@ router.post('/', async (req, res) => {
   }
 });
 
-// GET /api/trips — retrieve all trips
+// GET /api/trips — retrieve trips (supports ?from, ?to, ?transport, ?purpose)
 router.get('/', async (req, res) => {
   try {
-    const trips = await Trip.find().sort({ createdAt: -1 });
+    const filter = buildFilter(req.query);
+    const trips = await Trip.find(filter).sort({ createdAt: -1 });
     res.json(trips);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-// GET /api/trips/stats — analytics for admin dashboard
+// GET /api/trips/stats — analytics (supports same query params as GET /api/trips)
 router.get('/stats', async (req, res) => {
   try {
-    const total = await Trip.countDocuments();
+    const filter = buildFilter(req.query);
+    const matchStage = Object.keys(filter).length > 0 ? [{ $match: filter }] : [];
+
+    const total = await Trip.countDocuments(filter);
 
     const byPurpose = await Trip.aggregate([
+      ...matchStage,
       { $group: { _id: '$tripPurpose', count: { $sum: 1 } } },
     ]);
 
     const byTransport = await Trip.aggregate([
+      ...matchStage,
       { $group: { _id: '$modeOfTransport', count: { $sum: 1 } } },
     ]);
 
     const avgResult = await Trip.aggregate([
+      ...matchStage,
       { $group: { _id: null, avgPassengers: { $avg: '$numberOfPassengers' } } },
     ]);
     const avgPassengers = avgResult.length > 0
@@ -54,6 +73,7 @@ router.get('/stats', async (req, res) => {
       : 0;
 
     const tripsPerDay = await Trip.aggregate([
+      ...matchStage,
       {
         $group: {
           _id: { $dateToString: { format: '%Y-%m-%d', date: '$tripStartTime' } },
@@ -64,6 +84,7 @@ router.get('/stats', async (req, res) => {
     ]);
 
     const durationResult = await Trip.aggregate([
+      ...matchStage,
       {
         $project: {
           durationMinutes: {
@@ -80,7 +101,120 @@ router.get('/stats', async (req, res) => {
       ? Math.round(durationResult[0].avgDuration * 10) / 10
       : 0;
 
-    res.json({ total, byPurpose, byTransport, avgPassengers, avgTripDurationMinutes, tripsPerDay });
+    // Total distance (haversine approximation in MongoDB)
+    const distResult = await Trip.aggregate([
+      ...matchStage,
+      {
+        $match: {
+          startLat: { $ne: null }, startLng: { $ne: null },
+          endLat: { $ne: null }, endLng: { $ne: null },
+        },
+      },
+      {
+        $project: {
+          distKm: {
+            $let: {
+              vars: {
+                dLat: { $degreesToRadians: { $subtract: ['$endLat', '$startLat'] } },
+                dLng: { $degreesToRadians: { $subtract: ['$endLng', '$startLng'] } },
+                lat1: { $degreesToRadians: '$startLat' },
+                lat2: { $degreesToRadians: '$endLat' },
+              },
+              in: {
+                $multiply: [
+                  6371,
+                  2,
+                  {
+                    $atan2: [
+                      {
+                        $sqrt: {
+                          $add: [
+                            { $multiply: [{ $sin: { $divide: ['$$dLat', 2] } }, { $sin: { $divide: ['$$dLat', 2] } }] },
+                            {
+                              $multiply: [
+                                { $cos: '$$lat1' },
+                                { $cos: '$$lat2' },
+                                { $sin: { $divide: ['$$dLng', 2] } },
+                                { $sin: { $divide: ['$$dLng', 2] } },
+                              ],
+                            },
+                          ],
+                        },
+                      },
+                      {
+                        $sqrt: {
+                          $subtract: [
+                            1,
+                            {
+                              $add: [
+                                { $multiply: [{ $sin: { $divide: ['$$dLat', 2] } }, { $sin: { $divide: ['$$dLat', 2] } }] },
+                                {
+                                  $multiply: [
+                                    { $cos: '$$lat1' },
+                                    { $cos: '$$lat2' },
+                                    { $sin: { $divide: ['$$dLng', 2] } },
+                                    { $sin: { $divide: ['$$dLng', 2] } },
+                                  ],
+                                },
+                              ],
+                            },
+                          ],
+                        },
+                      },
+                    ],
+                  },
+                ],
+              },
+            },
+          },
+        },
+      },
+      { $group: { _id: null, totalKm: { $sum: '$distKm' } } },
+    ]);
+    const totalDistanceKm = distResult.length > 0
+      ? Math.round(distResult[0].totalKm * 10) / 10
+      : 0;
+
+    // Most common transport
+    const topTransport = await Trip.aggregate([
+      ...matchStage,
+      { $group: { _id: '$modeOfTransport', count: { $sum: 1 } } },
+      { $sort: { count: -1 } },
+      { $limit: 1 },
+    ]);
+    const mostCommonTransport = topTransport.length > 0 ? topTransport[0]._id : '';
+
+    // Most common purpose
+    const topPurpose = await Trip.aggregate([
+      ...matchStage,
+      { $group: { _id: '$tripPurpose', count: { $sum: 1 } } },
+      { $sort: { count: -1 } },
+      { $limit: 1 },
+    ]);
+    const mostCommonPurpose = topPurpose.length > 0 ? topPurpose[0]._id : '';
+
+    // Peak travel hour
+    const peakResult = await Trip.aggregate([
+      ...matchStage,
+      { $project: { hour: { $hour: '$tripStartTime' } } },
+      { $group: { _id: '$hour', count: { $sum: 1 } } },
+      { $sort: { count: -1 } },
+      { $limit: 1 },
+    ]);
+    const peakHour = peakResult.length > 0 ? peakResult[0]._id : 0;
+
+    res.json({
+      total,
+      byPurpose,
+      byTransport,
+      avgPassengers,
+      avgTripDurationMinutes,
+      tripsPerDay,
+      totalDistanceKm,
+      mostCommonTransport,
+      mostCommonPurpose,
+      peakHour,
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
