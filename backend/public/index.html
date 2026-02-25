@@ -16,6 +16,8 @@
         <p class="subtitle">KSCSTE Research Dashboard</p>
       </div>
       <div class="header-actions">
+        <button id="export-csv-btn" class="header-btn" title="Export CSV" onclick="exportCSV()">&#x1f4e5; CSV</button>
+        <button id="export-pdf-btn" class="header-btn" title="Export PDF" onclick="exportPDF()">&#x1f4c4; PDF</button>
         <button id="refresh-btn" class="header-btn" title="Refresh data">&#x21bb; Refresh</button>
       </div>
     </div>
@@ -179,12 +181,14 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.2/jspdf.umd.min.js"></script>
   <script src="js/state.js"></script>
   <script src="js/charts.js"></script>
   <script src="js/map.js"></script>
   <script src="js/heatmap.js"></script>
   <script src="js/table.js"></script>
   <script src="js/filters.js"></script>
+  <script src="js/export.js"></script>
   <script src="js/dashboard.js"></script>
 </body>
 </html>
