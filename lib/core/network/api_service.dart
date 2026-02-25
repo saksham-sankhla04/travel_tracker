@@ -3,8 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
 class ApiService {
-  // Change this to your server's IP when testing on a physical device.
-  static const String baseUrl = 'http://192.168.31.211:3000';
+  static const String baseUrl = 'https://travel-tracker-8li7.onrender.com';
 
   static Future<bool> submitTrip(Map<String, dynamic> tripData) async {
     try {

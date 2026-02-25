@@ -22,14 +22,16 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'Travel Tracker API running' });
 });
 
-// Connect to MongoDB and start server
+// Start server immediately (required for Render health checks)
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
+
+// Connect to MongoDB in background
 mongoose
   .connect(process.env.MONGODB_URI)
   .then(() => {
     console.log('Connected to MongoDB');
-    app.listen(PORT, () => {
-      console.log(`Server running on port ${PORT}`);
-    });
   })
   .catch((err) => {
     console.error('MongoDB connection error:', err.message);
