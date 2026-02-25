@@ -55,7 +55,35 @@ async function fetchAndRender() {
   }
 }
 
+// Dark mode toggle
+function initTheme() {
+  var saved = localStorage.getItem('dashboard-theme');
+  if (saved) document.documentElement.setAttribute('data-theme', saved);
+
+  document.getElementById('theme-toggle').addEventListener('click', function () {
+    var html = document.documentElement;
+    var isDark = html.getAttribute('data-theme') === 'dark';
+    var newTheme = isDark ? 'light' : 'dark';
+    html.setAttribute('data-theme', newTheme);
+    localStorage.setItem('dashboard-theme', newTheme);
+    this.textContent = isDark ? '\u{1f319}' : '\u2600\ufe0f';
+
+    // Re-render charts to pick up new theme colors
+    if (AppState.stats) {
+      renderPurposeChart(AppState.stats.byPurpose);
+      renderTransportChart(AppState.stats.byTransport);
+      renderTimelineChart(AppState.stats.tripsPerDay);
+    }
+  });
+
+  // Set initial icon
+  if (saved === 'dark') {
+    document.getElementById('theme-toggle').textContent = '\u2600\ufe0f';
+  }
+}
+
 document.addEventListener('DOMContentLoaded', function () {
+  initTheme();
   fetchAndRender();
   document.getElementById('refresh-btn').addEventListener('click', fetchAndRender);
   initFilters();

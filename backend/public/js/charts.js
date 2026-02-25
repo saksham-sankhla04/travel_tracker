@@ -6,8 +6,20 @@ var PIE_COLORS = [
   '#3498db', '#2ecc71', '#e74c3c', '#f39c12', '#9b59b6', '#1abc9c',
 ];
 
+// Get text color from CSS variable for theme-aware charts
+function getChartTextColor() {
+  return getComputedStyle(document.documentElement)
+    .getPropertyValue('--text-secondary').trim() || '#7f8c8d';
+}
+
+function getChartGridColor() {
+  return getComputedStyle(document.documentElement)
+    .getPropertyValue('--border-light').trim() || '#e9ecef';
+}
+
 function renderPurposeChart(byPurpose) {
   if (purposeChart) purposeChart.destroy();
+  var textColor = getChartTextColor();
   var ctx = document.getElementById('purpose-chart').getContext('2d');
   purposeChart = new Chart(ctx, {
     type: 'doughnut',
@@ -21,7 +33,10 @@ function renderPurposeChart(byPurpose) {
     options: {
       responsive: true,
       plugins: {
-        legend: { position: 'bottom' },
+        legend: {
+          position: 'bottom',
+          labels: { color: textColor },
+        },
       },
     },
   });
@@ -29,6 +44,7 @@ function renderPurposeChart(byPurpose) {
 
 function renderTransportChart(byTransport) {
   if (transportChart) transportChart.destroy();
+  var textColor = getChartTextColor();
   var ctx = document.getElementById('transport-chart').getContext('2d');
   transportChart = new Chart(ctx, {
     type: 'doughnut',
@@ -42,7 +58,10 @@ function renderTransportChart(byTransport) {
     options: {
       responsive: true,
       plugins: {
-        legend: { position: 'bottom' },
+        legend: {
+          position: 'bottom',
+          labels: { color: textColor },
+        },
       },
     },
   });
@@ -50,6 +69,8 @@ function renderTransportChart(byTransport) {
 
 function renderTimelineChart(tripsPerDay) {
   if (timelineChart) timelineChart.destroy();
+  var textColor = getChartTextColor();
+  var gridColor = getChartGridColor();
   var ctx = document.getElementById('timeline-chart').getContext('2d');
   timelineChart = new Chart(ctx, {
     type: 'bar',
@@ -65,8 +86,16 @@ function renderTimelineChart(tripsPerDay) {
     options: {
       responsive: true,
       scales: {
-        y: { beginAtZero: true, ticks: { stepSize: 1 } },
-        x: { title: { display: true, text: 'Date' } },
+        y: {
+          beginAtZero: true,
+          ticks: { stepSize: 1, color: textColor },
+          grid: { color: gridColor },
+        },
+        x: {
+          title: { display: true, text: 'Date', color: textColor },
+          ticks: { color: textColor },
+          grid: { color: gridColor },
+        },
       },
       plugins: {
         legend: { display: false },

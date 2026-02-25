@@ -1,3 +1,41 @@
+:root {
+  --bg-primary: #f0f3f5;
+  --bg-card: #ffffff;
+  --bg-input: #f8f9fa;
+  --bg-header: #1a5276;
+  --text-primary: #2c3e50;
+  --text-secondary: #7f8c8d;
+  --text-muted: #95a5a6;
+  --text-heading: #5a6c7d;
+  --accent: #1a5276;
+  --accent-light: #3498db;
+  --border: #dde1e5;
+  --border-light: #e9ecef;
+  --border-row: #f0f0f0;
+  --shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  --shadow-hover: 0 4px 12px rgba(0, 0, 0, 0.12);
+  --radius: 10px;
+  --transition: 0.25s ease;
+}
+
+[data-theme="dark"] {
+  --bg-primary: #0f172a;
+  --bg-card: #1e293b;
+  --bg-input: #334155;
+  --bg-header: #0f172a;
+  --text-primary: #e2e8f0;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+  --text-heading: #94a3b8;
+  --accent: #38bdf8;
+  --accent-light: #7dd3fc;
+  --border: #334155;
+  --border-light: #1e293b;
+  --border-row: #334155;
+  --shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  --shadow-hover: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
 * {
   margin: 0;
   padding: 0;
@@ -6,9 +44,10 @@
 
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  background: #f0f3f5;
-  color: #2c3e50;
+  background: var(--bg-primary);
+  color: var(--text-primary);
   line-height: 1.6;
+  transition: background var(--transition), color var(--transition);
 }
 
 .container {
@@ -19,9 +58,10 @@ body {
 
 /* Header */
 .header {
-  background: #1a5276;
+  background: var(--bg-header);
   color: #fff;
   padding: 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .header-content {
@@ -56,7 +96,7 @@ body {
   padding: 8px 16px;
   border-radius: 6px;
   cursor: pointer;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   transition: background 0.2s;
 }
 
@@ -75,11 +115,12 @@ body {
   flex-wrap: wrap;
   gap: 12px;
   align-items: flex-end;
-  background: #fff;
-  border-radius: 10px;
+  background: var(--bg-card);
+  border-radius: var(--radius);
   padding: 16px 20px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--shadow);
   margin-bottom: 24px;
+  transition: background var(--transition), box-shadow var(--transition);
 }
 
 .filter-group {
@@ -92,34 +133,34 @@ body {
   font-size: 0.75rem;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  color: #7f8c8d;
+  color: var(--text-secondary);
   font-weight: 600;
 }
 
 .filter-group input,
 .filter-group select {
   padding: 8px 12px;
-  border: 1px solid #dde1e5;
+  border: 1px solid var(--border);
   border-radius: 6px;
   font-size: 0.85rem;
-  color: #2c3e50;
-  background: #f8f9fa;
-  transition: border-color 0.2s;
+  color: var(--text-primary);
+  background: var(--bg-input);
+  transition: border-color 0.2s, background 0.2s;
 }
 
 .filter-group input:focus,
 .filter-group select:focus {
   outline: none;
-  border-color: #1a5276;
-  background: #fff;
+  border-color: var(--accent);
+  background: var(--bg-card);
 }
 
 .filter-clear-btn {
   padding: 8px 16px;
-  border: 1px solid #dde1e5;
+  border: 1px solid var(--border);
   border-radius: 6px;
-  background: #f8f9fa;
-  color: #7f8c8d;
+  background: var(--bg-input);
+  color: var(--text-secondary);
   cursor: pointer;
   font-size: 0.85rem;
   transition: background 0.2s, color 0.2s;
@@ -140,18 +181,18 @@ body {
 }
 
 .card {
-  background: #fff;
-  border-radius: 10px;
+  background: var(--bg-card);
+  border-radius: var(--radius);
   padding: 18px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--shadow);
   display: flex;
   align-items: center;
   gap: 14px;
-  transition: box-shadow 0.25s, transform 0.25s;
+  transition: box-shadow var(--transition), transform var(--transition), background var(--transition);
 }
 
 .card:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  box-shadow: var(--shadow-hover);
   transform: translateY(-2px);
 }
 
@@ -170,17 +211,17 @@ body {
   font-size: 0.75rem;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  color: #7f8c8d;
+  color: var(--text-secondary);
   margin-bottom: 4px;
 }
 
 .card-value {
   font-size: 1.5rem;
   font-weight: 700;
-  color: #1a5276;
+  color: var(--accent);
 }
 
-/* Charts — all three in one row */
+/* Charts */
 .charts-section {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
@@ -189,26 +230,28 @@ body {
 }
 
 .chart-container {
-  background: #fff;
-  border-radius: 10px;
+  background: var(--bg-card);
+  border-radius: var(--radius);
   padding: 16px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--shadow);
+  transition: background var(--transition), box-shadow var(--transition);
 }
 
 .chart-container h3 {
   font-size: 0.85rem;
   font-weight: 600;
   margin-bottom: 12px;
-  color: #2c3e50;
+  color: var(--text-primary);
 }
 
 /* Map */
 .map-section {
-  background: #fff;
-  border-radius: 10px;
+  background: var(--bg-card);
+  border-radius: var(--radius);
   padding: 20px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--shadow);
   margin-bottom: 24px;
+  transition: background var(--transition), box-shadow var(--transition);
 }
 
 .map-header {
@@ -221,13 +264,13 @@ body {
 .map-header h3 {
   font-size: 0.95rem;
   font-weight: 600;
-  color: #2c3e50;
+  color: var(--text-primary);
 }
 
 .map-toggles {
   display: flex;
   gap: 4px;
-  background: #f0f3f5;
+  background: var(--bg-primary);
   border-radius: 8px;
   padding: 3px;
 }
@@ -237,7 +280,7 @@ body {
   border: none;
   border-radius: 6px;
   background: transparent;
-  color: #7f8c8d;
+  color: var(--text-secondary);
   font-size: 0.8rem;
   font-weight: 600;
   cursor: pointer;
@@ -245,13 +288,13 @@ body {
 }
 
 .map-toggle.active {
-  background: #1a5276;
+  background: var(--accent);
   color: #fff;
 }
 
 .map-toggle:hover:not(.active) {
-  background: #dde1e5;
-  color: #2c3e50;
+  background: var(--border);
+  color: var(--text-primary);
 }
 
 #map {
@@ -262,18 +305,19 @@ body {
 
 /* Table */
 .table-section {
-  background: #fff;
-  border-radius: 10px;
+  background: var(--bg-card);
+  border-radius: var(--radius);
   padding: 20px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--shadow);
   margin-bottom: 24px;
+  transition: background var(--transition), box-shadow var(--transition);
 }
 
 .table-section h3 {
   font-size: 0.95rem;
   font-weight: 600;
   margin-bottom: 16px;
-  color: #2c3e50;
+  color: var(--text-primary);
 }
 
 .table-wrapper {
@@ -287,22 +331,22 @@ table {
 }
 
 thead th {
-  background: #f8f9fa;
+  background: var(--bg-input);
   padding: 10px 12px;
   text-align: left;
   font-weight: 600;
-  color: #5a6c7d;
-  border-bottom: 2px solid #e9ecef;
+  color: var(--text-heading);
+  border-bottom: 2px solid var(--border-light);
   white-space: nowrap;
 }
 
 tbody td {
   padding: 10px 12px;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid var(--border-row);
 }
 
 tbody tr:hover {
-  background: #f8f9fa;
+  background: var(--bg-input);
 }
 
 tbody tr[data-has-location="true"] {
@@ -313,7 +357,7 @@ tbody tr[data-has-location="true"] {
 .footer {
   text-align: center;
   padding: 20px;
-  color: #95a5a6;
+  color: var(--text-muted);
   font-size: 0.8rem;
 }
 
@@ -321,8 +365,30 @@ tbody tr[data-has-location="true"] {
 .empty-state {
   text-align: center;
   padding: 40px 20px;
-  color: #95a5a6;
+  color: var(--text-muted);
   font-size: 0.9rem;
+}
+
+/* Section fade-in animation */
+.cards-section,
+.charts-section,
+.map-section,
+.table-section {
+  opacity: 0;
+  transform: translateY(10px);
+  animation: fadeInUp 0.4s ease forwards;
+}
+
+.cards-section { animation-delay: 0.05s; }
+.charts-section { animation-delay: 0.1s; }
+.map-section { animation-delay: 0.15s; }
+.table-section { animation-delay: 0.2s; }
+
+@keyframes fadeInUp {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* Responsive */
