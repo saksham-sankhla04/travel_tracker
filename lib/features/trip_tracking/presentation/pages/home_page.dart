@@ -117,9 +117,10 @@ class _HomePageState extends ConsumerState<HomePage> {
       ),
       body: Padding(
         padding: const EdgeInsets.all(20.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+        child: ListView(
           children: [
+            _summaryBanner(context, state.serviceRunning, state.isTripActive),
+            const SizedBox(height: 16),
             TrackingCard(
               serviceRunning: state.serviceRunning,
               permissionsGranted: state.permissionsGranted,
@@ -136,20 +137,78 @@ class _HomePageState extends ConsumerState<HomePage> {
                 onManualStopTrip: notifier.endCurrentTripManually,
               ),
             const SizedBox(height: 16),
-            FilledButton.tonalIcon(
-              onPressed: () => context.push('/history'),
-              icon: const Icon(Icons.history),
-              label: const Text('Trip History'),
-            ),
-            const SizedBox(height: 16),
-            // Debug: simulate a trip for testing
-            OutlinedButton.icon(
-              onPressed: () => _simulateTrip(context),
-              icon: const Icon(Icons.bug_report),
-              label: const Text('Simulate Trip (Debug)'),
+            Row(
+              children: [
+                Expanded(
+                  child: FilledButton.tonalIcon(
+                    onPressed: () => context.push('/history'),
+                    icon: const Icon(Icons.history),
+                    label: const Text('Trip History'),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () => _simulateTrip(context),
+                    icon: const Icon(Icons.bug_report),
+                    label: const Text('Simulate'),
+                  ),
+                ),
+              ],
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _summaryBanner(
+    BuildContext context,
+    bool serviceRunning,
+    bool isTripActive,
+  ) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final title = serviceRunning
+        ? (isTripActive ? 'Trip currently active' : 'Monitoring for trips')
+        : 'Tracking is turned off';
+    final subtitle = serviceRunning
+        ? 'Background service is running and ready.'
+        : 'Start tracking to detect travel automatically.';
+
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            colorScheme.primaryContainer,
+            colorScheme.secondaryContainer.withValues(alpha: 0.8),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            serviceRunning ? Icons.travel_explore : Icons.power_settings_new,
+            color: colorScheme.onPrimaryContainer,
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+                ),
+                const SizedBox(height: 2),
+                Text(subtitle, style: Theme.of(context).textTheme.bodySmall),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

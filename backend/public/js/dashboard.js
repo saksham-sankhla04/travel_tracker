@@ -14,6 +14,7 @@ async function fetchAndRender() {
 
     AppState.stats = stats;
     AppState.trips = trips;
+    AppState.tablePagination.currentPage = 1;
 
     // Overview cards
     document.getElementById('stat-total').textContent = stats.total;
@@ -125,6 +126,7 @@ function initTheme() {
 
 document.addEventListener('DOMContentLoaded', function () {
   initTheme();
+  initTripsPagination();
   fetchAndRender();
   document.getElementById('refresh-btn').addEventListener('click', fetchAndRender);
   initFilters();

@@ -130,6 +130,7 @@ class _TripCard extends StatelessWidget {
     final durationStr = _formatDuration(duration);
     final isCompleted = (record['surveySubmitted'] as bool?) == true;
     final isSynced = (record['isSynced'] as bool?) == true;
+    final routePoints = (record['routePoints'] as List<dynamic>?) ?? [];
 
     final transport = survey != null
         ? _capitalize(survey!.modeOfTransport)
@@ -196,6 +197,13 @@ class _TripCard extends StatelessWidget {
               icon: Icons.people_outline,
               label: 'Passengers',
               value: passengers,
+            ),
+            const SizedBox(height: 8),
+            _detailRow(
+              context,
+              icon: Icons.alt_route,
+              label: 'Route points',
+              value: '${routePoints.length}',
             ),
           ],
         ),

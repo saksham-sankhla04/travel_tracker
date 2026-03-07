@@ -3,6 +3,10 @@ var AppState = {
   trips: [],
   stats: null,
   currentMapView: 'routes', // 'routes' or 'heatmap'
+  tablePagination: {
+    currentPage: 1,
+    pageSize: 10,
+  },
 };
 
 var LABEL_MAP = {

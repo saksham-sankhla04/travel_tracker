@@ -13,9 +13,9 @@ void main() async {
 
   final initialPayload = NotificationService.initialPayload;
 
-  runApp(ProviderScope(
-    child: TravelTrackerApp(initialPayload: initialPayload),
-  ));
+  runApp(
+    ProviderScope(child: TravelTrackerApp(initialPayload: initialPayload)),
+  );
 }
 
 class TravelTrackerApp extends StatefulWidget {
@@ -76,10 +76,12 @@ class _TravelTrackerAppState extends State<TravelTrackerApp> {
     if (pending != null) {
       final rawPoints = pending['routePoints'] as List<dynamic>?;
       routePoints = rawPoints
-          ?.map((p) => {
-                'lat': (p['lat'] as num).toDouble(),
-                'lng': (p['lng'] as num).toDouble(),
-              })
+          ?.map(
+            (p) => {
+              'lat': (p['lat'] as num).toDouble(),
+              'lng': (p['lng'] as num).toDouble(),
+            },
+          )
           .toList();
     }
 
@@ -95,6 +97,28 @@ class _TravelTrackerAppState extends State<TravelTrackerApp> {
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.teal),
         useMaterial3: true,
+        scaffoldBackgroundColor: const Color(0xFFF4F7F9),
+        cardTheme: const CardThemeData(
+          margin: EdgeInsets.zero,
+          elevation: 1,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.all(Radius.circular(16)),
+          ),
+        ),
+        filledButtonTheme: FilledButtonThemeData(
+          style: FilledButton.styleFrom(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+        ),
+        outlinedButtonTheme: OutlinedButtonThemeData(
+          style: OutlinedButton.styleFrom(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+        ),
       ),
       routerConfig: appRouter,
     );

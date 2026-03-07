@@ -7,6 +7,7 @@ function initFilters() {
   var clearBtn = document.getElementById('filter-clear');
 
   function onFilterChange() {
+    AppState.tablePagination.currentPage = 1;
     fetchAndRender();
   }
 

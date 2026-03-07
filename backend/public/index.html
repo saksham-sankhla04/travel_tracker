@@ -178,6 +178,21 @@
           <tbody id="trips-tbody"></tbody>
         </table>
       </div>
+      <div class="table-pagination">
+        <div class="pagination-left">
+          <label for="table-page-size">Rows per page</label>
+          <select id="table-page-size">
+            <option value="10" selected>10</option>
+            <option value="20">20</option>
+            <option value="50">50</option>
+          </select>
+        </div>
+        <div class="pagination-right">
+          <button id="table-prev-btn" class="pagination-btn">Prev</button>
+          <span id="table-page-info">Page 1 of 1</span>
+          <button id="table-next-btn" class="pagination-btn">Next</button>
+        </div>
+      </div>
     </section>
 
   </main>

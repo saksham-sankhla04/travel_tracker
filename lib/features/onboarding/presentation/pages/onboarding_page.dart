@@ -113,6 +113,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false,
@@ -133,39 +134,61 @@ class _OnboardingPageState extends State<OnboardingPage> {
               ),
               const SizedBox(height: 16),
               Expanded(
-                child: PageView(
-                  controller: _pageController,
-                  physics: const NeverScrollableScrollPhysics(),
-                  children: [
-                    _buildWelcomeStep(context),
-                    _buildHowItWorksStep(context),
-                    _buildPermissionStep(context),
-                    _buildAddressStep(context),
-                    _buildFinishStep(context),
-                  ],
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: colorScheme.surface,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: colorScheme.outlineVariant),
+                  ),
+                  padding: const EdgeInsets.all(14),
+                  child: PageView(
+                    controller: _pageController,
+                    physics: const NeverScrollableScrollPhysics(),
+                    children: [
+                      _buildWelcomeStep(context),
+                      _buildHowItWorksStep(context),
+                      _buildPermissionStep(context),
+                      _buildAddressStep(context),
+                      _buildFinishStep(context),
+                    ],
+                  ),
                 ),
               ),
               const SizedBox(height: 12),
               Row(
                 children: [
                   if (_currentStep > 0)
-                    OutlinedButton(onPressed: _back, child: const Text('Back'))
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: _back,
+                        child: const Text('Back'),
+                      ),
+                    )
                   else
-                    const SizedBox.shrink(),
-                  const Spacer(),
+                    const Expanded(child: SizedBox.shrink()),
+                  const SizedBox(width: 10),
                   if (_currentStep < _lastStep)
-                    FilledButton(onPressed: _next, child: const Text('Next'))
+                    Expanded(
+                      child: FilledButton(
+                        onPressed: _next,
+                        child: const Text('Next'),
+                      ),
+                    )
                   else
-                    FilledButton.icon(
-                      onPressed: _isSaving ? null : _finish,
-                      icon: _isSaving
-                          ? const SizedBox(
-                              width: 16,
-                              height: 16,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : const Icon(Icons.check),
-                      label: Text(_isSaving ? 'Saving...' : 'Start App'),
+                    Expanded(
+                      child: FilledButton.icon(
+                        onPressed: _isSaving ? null : _finish,
+                        icon: _isSaving
+                            ? const SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : const Icon(Icons.check),
+                        label: Text(_isSaving ? 'Saving...' : 'Start App'),
+                      ),
                     ),
                 ],
               ),
@@ -179,9 +202,10 @@ class _OnboardingPageState extends State<OnboardingPage> {
   Widget _buildWelcomeStep(BuildContext context) {
     return ListView(
       children: [
-        Text(
-          'Welcome to Travel Tracker',
-          style: Theme.of(context).textTheme.headlineSmall,
+        _stepTitle(
+          context,
+          icon: Icons.waving_hand,
+          title: 'Welcome to Travel Tracker',
         ),
         const SizedBox(height: 12),
         const Text(
@@ -210,7 +234,11 @@ class _OnboardingPageState extends State<OnboardingPage> {
   Widget _buildHowItWorksStep(BuildContext context) {
     return ListView(
       children: [
-        Text('How it works', style: Theme.of(context).textTheme.headlineSmall),
+        _stepTitle(
+          context,
+          icon: Icons.psychology_alt_outlined,
+          title: 'How it works',
+        ),
         const SizedBox(height: 16),
         const Text('1. Start tracking from the home screen.'),
         const SizedBox(height: 8),
@@ -247,7 +275,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
   Widget _buildPermissionStep(BuildContext context) {
     return ListView(
       children: [
-        Text('Permissions', style: Theme.of(context).textTheme.headlineSmall),
+        _stepTitle(context, icon: Icons.shield_outlined, title: 'Permissions'),
         const SizedBox(height: 12),
         const Text(
           'Location and notification permissions are required for reliable trip tracking.',
@@ -293,9 +321,10 @@ class _OnboardingPageState extends State<OnboardingPage> {
       key: _addressFormKey,
       child: ListView(
         children: [
-          Text(
-            'Your addresses',
-            style: Theme.of(context).textTheme.headlineSmall,
+          _stepTitle(
+            context,
+            icon: Icons.location_city_outlined,
+            title: 'Your addresses',
           ),
           const SizedBox(height: 12),
           const Text('Home address is required. Work/School is optional.'),
@@ -359,7 +388,11 @@ class _OnboardingPageState extends State<OnboardingPage> {
   Widget _buildFinishStep(BuildContext context) {
     return ListView(
       children: [
-        Text('You are ready', style: Theme.of(context).textTheme.headlineSmall),
+        _stepTitle(
+          context,
+          icon: Icons.verified_outlined,
+          title: 'You are ready',
+        ),
         const SizedBox(height: 12),
         _statusRow('Permissions granted', _allPermissionsGranted),
         _statusRow(
@@ -418,6 +451,20 @@ class _OnboardingPageState extends State<OnboardingPage> {
           Text(label),
         ],
       ),
+    );
+  }
+
+  Widget _stepTitle(
+    BuildContext context, {
+    required IconData icon,
+    required String title,
+  }) {
+    return Row(
+      children: [
+        Icon(icon, color: Theme.of(context).colorScheme.primary),
+        const SizedBox(width: 8),
+        Text(title, style: Theme.of(context).textTheme.headlineSmall),
+      ],
     );
   }
 }
