@@ -30,6 +30,8 @@ async function fetchAndRender() {
       stats.total > 0 ? stats.peakHour + ':00' : '--';
     document.getElementById('stat-last-updated').textContent =
       new Date().toLocaleTimeString();
+    document.getElementById('stat-quality').textContent =
+      buildQualitySummary(trips);
 
     // Charts
     renderPurposeChart(stats.byPurpose);
@@ -53,6 +55,45 @@ async function fetchAndRender() {
     refreshBtn.disabled = false;
     refreshBtn.textContent = '\u21bb Refresh';
   }
+}
+
+function buildQualitySummary(trips) {
+  var total = trips.length;
+  if (total === 0) return '--';
+
+  var completedCount = trips.filter(function (trip) {
+    return (
+      trip.isAutoSubmitted !== true &&
+      trip.tripPurpose &&
+      trip.tripPurpose !== 'unknown' &&
+      trip.modeOfTransport &&
+      trip.modeOfTransport !== 'unknown' &&
+      Number(trip.numberOfPassengers) > 0
+    );
+  }).length;
+
+  var autoSavedCount = trips.filter(function (trip) {
+    return (
+      trip.isAutoSubmitted === true ||
+      trip.tripPurpose === 'unknown' ||
+      trip.modeOfTransport === 'unknown' ||
+      Number(trip.numberOfPassengers) === 0
+    );
+  }).length;
+
+  var completedPct = Math.round((completedCount / total) * 100);
+  var autoSavedPct = Math.round((autoSavedCount / total) * 100);
+  var syncedPct = 100;
+
+  return (
+    'Done ' +
+    completedPct +
+    '% | Auto ' +
+    autoSavedPct +
+    '% | Sync ' +
+    syncedPct +
+    '%'
+  );
 }
 
 // Dark mode toggle

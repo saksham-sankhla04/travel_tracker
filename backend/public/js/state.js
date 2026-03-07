@@ -11,6 +11,7 @@ var LABEL_MAP = {
   shopping: 'Shopping',
   leisure: 'Leisure',
   other: 'Other',
+  unknown: 'Unknown',
   bus: 'Bus',
   car: 'Car',
   bike: 'Bike',

@@ -35,4 +35,14 @@ class OnboardingStorageService {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString(_workSchoolAddressKey);
   }
+
+  static Future<void> updateAddresses({
+    required String homeAddress,
+    String? workSchoolAddress,
+  }) async {
+    await completeOnboarding(
+      homeAddress: homeAddress,
+      workSchoolAddress: workSchoolAddress,
+    );
+  }
 }

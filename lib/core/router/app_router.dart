@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../features/onboarding/presentation/pages/onboarding_page.dart';
+import '../../features/onboarding/presentation/pages/profile_page.dart';
 import '../../features/trip_tracking/presentation/pages/home_page.dart';
 import '../../features/trip_survey/presentation/pages/survey_page.dart';
 import '../../features/trip_survey/presentation/pages/trip_history_page.dart';
@@ -17,6 +18,7 @@ final appRouter = GoRouter(
       path: '/onboarding',
       builder: (context, state) => const OnboardingPage(),
     ),
+    GoRoute(path: '/profile', builder: (context, state) => const ProfilePage()),
     GoRoute(
       path: '/survey',
       builder: (context, state) {
