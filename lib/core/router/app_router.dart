@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../features/onboarding/presentation/pages/onboarding_page.dart';
 import '../../features/trip_tracking/presentation/pages/home_page.dart';
 import '../../features/trip_survey/presentation/pages/survey_page.dart';
 import '../../features/trip_survey/presentation/pages/trip_history_page.dart';
@@ -11,9 +12,10 @@ final appRouter = GoRouter(
   navigatorKey: rootNavigatorKey,
   initialLocation: '/',
   routes: [
+    GoRoute(path: '/', builder: (context, state) => const HomePage()),
     GoRoute(
-      path: '/',
-      builder: (context, state) => const HomePage(),
+      path: '/onboarding',
+      builder: (context, state) => const OnboardingPage(),
     ),
     GoRoute(
       path: '/survey',

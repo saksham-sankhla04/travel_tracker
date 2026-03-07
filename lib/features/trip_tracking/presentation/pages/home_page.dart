@@ -4,11 +4,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/router/app_router.dart';
-import '../../../../core/services/permission_service.dart';
+import '../../../onboarding/data/services/onboarding_storage_service.dart';
 import '../../../trip_survey/data/services/survey_storage_service.dart';
 import '../../../trip_survey/presentation/providers/survey_provider.dart';
 import '../providers/trip_tracking_provider.dart';
-import '../widgets/permission_card.dart';
 import '../widgets/tracking_card.dart';
 import '../widgets/live_data_card.dart';
 
@@ -20,10 +19,25 @@ class HomePage extends ConsumerStatefulWidget {
 }
 
 class _HomePageState extends ConsumerState<HomePage> {
+  Future<void> _refreshPermissions() async {
+    await ref.read(tripTrackingProvider.notifier).checkPermissions();
+  }
+
   @override
   void initState() {
     super.initState();
     Future.microtask(() async {
+      // First-time users must complete onboarding.
+      final hasCompletedOnboarding =
+          await OnboardingStorageService.hasCompletedOnboarding();
+      if (!hasCompletedOnboarding && mounted) {
+        appRouter.go('/onboarding');
+        return;
+      }
+
+      // Permissions may have been granted during onboarding; refresh provider state.
+      await _refreshPermissions();
+
       // Sync any locally-saved surveys that haven't reached MongoDB yet
       final count = await ref
           .read(surveyProvider.notifier)
@@ -34,7 +48,7 @@ class _HomePageState extends ConsumerState<HomePage> {
         );
       }
 
-      // Sync ended trip logs that were auto-submitted with null survey fields.
+      // Sync ended trip logs that were auto-submitted with default fields.
       final tripRecordsSynced = await ref
           .read(surveyProvider.notifier)
           .syncPendingTripRecords();
@@ -78,6 +92,13 @@ class _HomePageState extends ConsumerState<HomePage> {
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Also refresh when this page becomes active again.
+    _refreshPermissions();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final state = ref.watch(tripTrackingProvider);
     final notifier = ref.read(tripTrackingProvider.notifier);
@@ -92,13 +113,6 @@ class _HomePageState extends ConsumerState<HomePage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            PermissionCard(
-              permissionStatus: state.permissionStatus,
-              permissionsGranted: state.permissionsGranted,
-              onRequestPermissions: notifier.requestPermissions,
-              onOpenSettings: PermissionService.openSettings,
-            ),
-            const SizedBox(height: 16),
             TrackingCard(
               serviceRunning: state.serviceRunning,
               permissionsGranted: state.permissionsGranted,
