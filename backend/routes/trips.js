@@ -18,13 +18,47 @@ function buildFilter(query) {
 // POST /api/trips — save a new trip survey (with duplicate prevention)
 router.post('/', async (req, res) => {
   try {
+    const hasSurveyData =
+      req.body.isAutoSubmitted !== true &&
+      req.body.tripPurpose != null &&
+      req.body.tripPurpose !== 'unknown' &&
+      req.body.modeOfTransport != null &&
+      req.body.modeOfTransport !== 'unknown' &&
+      req.body.numberOfPassengers != null &&
+      req.body.numberOfPassengers > 0 &&
+      req.body.surveyCompletedAt != null;
+
     const existing = await Trip.findOne({
       tripStartTime: req.body.tripStartTime,
       tripEndTime: req.body.tripEndTime,
-      surveyCompletedAt: req.body.surveyCompletedAt,
     });
     if (existing) {
-      return res.status(201).json({ message: 'Trip already exists', trip: existing });
+      const existingHasSurveyData =
+        existing.isAutoSubmitted !== true &&
+        existing.tripPurpose != null &&
+        existing.tripPurpose !== 'unknown' &&
+        existing.modeOfTransport != null &&
+        existing.modeOfTransport !== 'unknown' &&
+        existing.numberOfPassengers != null &&
+        existing.numberOfPassengers > 0 &&
+        existing.surveyCompletedAt != null;
+
+      if (hasSurveyData && !existingHasSurveyData) {
+        existing.tripPurpose = req.body.tripPurpose;
+        existing.modeOfTransport = req.body.modeOfTransport;
+        existing.numberOfPassengers = req.body.numberOfPassengers;
+        existing.surveyCompletedAt = req.body.surveyCompletedAt;
+        existing.isAutoSubmitted = false;
+        if (req.body.routePoints != null) existing.routePoints = req.body.routePoints;
+        if (req.body.startLat != null) existing.startLat = req.body.startLat;
+        if (req.body.startLng != null) existing.startLng = req.body.startLng;
+        if (req.body.endLat != null) existing.endLat = req.body.endLat;
+        if (req.body.endLng != null) existing.endLng = req.body.endLng;
+        await existing.save();
+        return res.status(200).json({ message: 'Trip survey updated', trip: existing });
+      }
+
+      return res.status(200).json({ message: 'Trip already exists', trip: existing });
     }
 
     const trip = new Trip(req.body);

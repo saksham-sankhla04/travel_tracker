@@ -7,10 +7,7 @@ class SurveyState {
   final List<TripSurveyModel> completedSurveys;
   final bool isLoading;
 
-  const SurveyState({
-    this.completedSurveys = const [],
-    this.isLoading = false,
-  });
+  const SurveyState({this.completedSurveys = const [], this.isLoading = false});
 
   SurveyState copyWith({
     List<TripSurveyModel>? completedSurveys,
@@ -70,6 +67,40 @@ class SurveyNotifier extends StateNotifier<SurveyState> {
 
     if (syncedCount > 0) {
       await loadSurveys();
+    }
+    return syncedCount;
+  }
+
+  /// Retries sending ended trip logs with default survey placeholder fields.
+  /// Returns number of trip logs synced.
+  Future<int> syncPendingTripRecords() async {
+    final unsynced = await SurveyStorageService.getUnsyncedTripRecords();
+    if (unsynced.isEmpty) return 0;
+
+    int syncedCount = 0;
+    for (final trip in unsynced) {
+      final payload = <String, dynamic>{
+        'tripStartTime': trip['startTime'],
+        'tripEndTime': trip['endTime'],
+        'tripPurpose': 'unknown',
+        'modeOfTransport': 'unknown',
+        'numberOfPassengers': 0,
+        'surveyCompletedAt': trip['endTime'],
+        'startLat': trip['startLat'],
+        'startLng': trip['startLng'],
+        'endLat': trip['endLat'],
+        'endLng': trip['endLng'],
+        'routePoints': trip['routePoints'],
+        'isAutoSubmitted': true,
+      };
+      final success = await ApiService.submitTrip(payload);
+      if (success) {
+        await SurveyStorageService.markTripRecordSynced(trip['id'] as String);
+        syncedCount++;
+      } else {
+        // Server unreachable — stop trying the rest.
+        break;
+      }
     }
     return syncedCount;
   }

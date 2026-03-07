@@ -19,9 +19,11 @@ class ApiService {
           )
           .timeout(const Duration(seconds: 10));
       if (kDebugMode) {
-        debugPrint('[ApiService] Response: ${response.statusCode} ${response.body}');
+        debugPrint(
+          '[ApiService] Response: ${response.statusCode} ${response.body}',
+        );
       }
-      return response.statusCode == 201;
+      return response.statusCode == 200 || response.statusCode == 201;
     } catch (e) {
       if (kDebugMode) {
         debugPrint('[ApiService] ERROR: $e');

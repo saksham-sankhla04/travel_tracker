@@ -82,6 +82,14 @@ class _SurveyPageState extends ConsumerState<SurveyPage> {
     // Save locally + sync to MongoDB via provider
     final sent = await ref.read(surveyProvider.notifier).submitSurvey(survey);
 
+    // Mark tracked raw trip as survey-submitted.
+    if (widget.tripStartTime != null && widget.tripEndTime != null) {
+      await SurveyStorageService.markTripRecordSurveySubmitted(
+        startTime: widget.tripStartTime!,
+        endTime: widget.tripEndTime!,
+      );
+    }
+
     // Clear pending trip so home page won't redirect here again
     await SurveyStorageService.clearPendingTrip();
 
@@ -89,9 +97,11 @@ class _SurveyPageState extends ConsumerState<SurveyPage> {
       setState(() => _isSubmitting = false);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(sent
-              ? 'Survey submitted successfully!'
-              : 'Saved locally. Will sync when server is available.'),
+          content: Text(
+            sent
+                ? 'Survey submitted successfully!'
+                : 'Saved locally. Will sync when server is available.',
+          ),
         ),
       );
       context.go('/');
@@ -126,10 +136,12 @@ class _SurveyPageState extends ConsumerState<SurveyPage> {
                   prefixIcon: Icon(Icons.flag),
                 ),
                 items: tripPurposeOptions
-                    .map((e) => DropdownMenuItem(
-                          value: e,
-                          child: Text(e[0].toUpperCase() + e.substring(1)),
-                        ))
+                    .map(
+                      (e) => DropdownMenuItem(
+                        value: e,
+                        child: Text(e[0].toUpperCase() + e.substring(1)),
+                      ),
+                    )
                     .toList(),
                 onChanged: (val) => setState(() => _tripPurpose = val!),
               ),
@@ -144,10 +156,12 @@ class _SurveyPageState extends ConsumerState<SurveyPage> {
                   prefixIcon: Icon(Icons.directions),
                 ),
                 items: transportModeOptions
-                    .map((e) => DropdownMenuItem(
-                          value: e,
-                          child: Text(e[0].toUpperCase() + e.substring(1)),
-                        ))
+                    .map(
+                      (e) => DropdownMenuItem(
+                        value: e,
+                        child: Text(e[0].toUpperCase() + e.substring(1)),
+                      ),
+                    )
                     .toList(),
                 onChanged: (val) => setState(() => _modeOfTransport = val!),
               ),
@@ -157,7 +171,9 @@ class _SurveyPageState extends ConsumerState<SurveyPage> {
               Card(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(
-                      horizontal: 16.0, vertical: 8.0),
+                    horizontal: 16.0,
+                    vertical: 8.0,
+                  ),
                   child: Row(
                     children: [
                       const Icon(Icons.people, color: Colors.grey),
@@ -166,8 +182,7 @@ class _SurveyPageState extends ConsumerState<SurveyPage> {
                       const Spacer(),
                       IconButton(
                         onPressed: _numberOfPassengers > 1
-                            ? () =>
-                                setState(() => _numberOfPassengers--)
+                            ? () => setState(() => _numberOfPassengers--)
                             : null,
                         icon: const Icon(Icons.remove_circle_outline),
                       ),
@@ -176,8 +191,7 @@ class _SurveyPageState extends ConsumerState<SurveyPage> {
                         style: Theme.of(context).textTheme.titleLarge,
                       ),
                       IconButton(
-                        onPressed: () =>
-                            setState(() => _numberOfPassengers++),
+                        onPressed: () => setState(() => _numberOfPassengers++),
                         icon: const Icon(Icons.add_circle_outline),
                       ),
                     ],

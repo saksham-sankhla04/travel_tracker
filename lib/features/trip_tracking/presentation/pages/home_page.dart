@@ -25,11 +25,26 @@ class _HomePageState extends ConsumerState<HomePage> {
     super.initState();
     Future.microtask(() async {
       // Sync any locally-saved surveys that haven't reached MongoDB yet
-      final count =
-          await ref.read(surveyProvider.notifier).syncPendingSurveys();
+      final count = await ref
+          .read(surveyProvider.notifier)
+          .syncPendingSurveys();
       if (count > 0 && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Synced $count pending survey(s) to server.')),
+        );
+      }
+
+      // Sync ended trip logs that were auto-submitted with null survey fields.
+      final tripRecordsSynced = await ref
+          .read(surveyProvider.notifier)
+          .syncPendingTripRecords();
+      if (tripRecordsSynced > 0 && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Synced $tripRecordsSynced pending trip record(s) to server.',
+            ),
+          ),
         );
       }
 
@@ -46,12 +61,15 @@ class _HomePageState extends ConsumerState<HomePage> {
         // Parse route points from pending trip
         final rawPoints = pending['routePoints'] as List<dynamic>?;
         final routePoints = rawPoints
-            ?.map((p) => {
-                  'lat': (p['lat'] as num).toDouble(),
-                  'lng': (p['lng'] as num).toDouble(),
-                })
+            ?.map(
+              (p) => {
+                'lat': (p['lat'] as num).toDouble(),
+                'lng': (p['lng'] as num).toDouble(),
+              },
+            )
             .toList();
-        final query = 'startTime=$startTime&endTime=$endTime'
+        final query =
+            'startTime=$startTime&endTime=$endTime'
             '&startLat=$startLat&startLng=$startLng'
             '&endLat=$endLat&endLng=$endLng';
         appRouter.go('/survey?$query', extra: {'routePoints': routePoints});
@@ -94,6 +112,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                 gpsAccuracy: state.gpsAccuracy,
                 isCoolingDown: state.isCoolingDown,
                 cooldownProgress: state.cooldownProgress,
+                onManualStopTrip: notifier.endCurrentTripManually,
               ),
             const SizedBox(height: 16),
             FilledButton.tonalIcon(

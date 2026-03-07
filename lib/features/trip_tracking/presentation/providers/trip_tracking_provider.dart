@@ -85,6 +85,11 @@ class TripTrackingNotifier extends StateNotifier<TripTrackingState> {
     state = state.copyWith(serviceRunning: !state.serviceRunning);
   }
 
+  Future<void> endCurrentTripManually() async {
+    if (!state.isTripActive) return;
+    await BackgroundLocationService.endCurrentTripManually();
+  }
+
   void _listenToLocationUpdates() {
     BackgroundLocationService.updates.listen((data) {
       if (data != null) {
@@ -93,7 +98,8 @@ class TripTrackingNotifier extends StateNotifier<TripTrackingState> {
           isTripActive: data['isTripActive'] as bool,
           gpsAccuracy: (data['accuracy'] as num?)?.toDouble() ?? 0.0,
           isCoolingDown: data['isCoolingDown'] as bool? ?? false,
-          cooldownProgress: (data['cooldownProgress'] as num?)?.toDouble() ?? 0.0,
+          cooldownProgress:
+              (data['cooldownProgress'] as num?)?.toDouble() ?? 0.0,
         );
       }
     });
@@ -103,5 +109,5 @@ class TripTrackingNotifier extends StateNotifier<TripTrackingState> {
 /// Global provider for trip tracking state.
 final tripTrackingProvider =
     StateNotifierProvider<TripTrackingNotifier, TripTrackingState>(
-  (ref) => TripTrackingNotifier(),
-);
+      (ref) => TripTrackingNotifier(),
+    );

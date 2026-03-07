@@ -6,6 +6,7 @@ class LiveDataCard extends StatelessWidget {
   final double gpsAccuracy;
   final bool isCoolingDown;
   final double cooldownProgress;
+  final VoidCallback? onManualStopTrip;
 
   const LiveDataCard({
     super.key,
@@ -14,6 +15,7 @@ class LiveDataCard extends StatelessWidget {
     this.gpsAccuracy = 0.0,
     this.isCoolingDown = false,
     this.cooldownProgress = 0.0,
+    this.onManualStopTrip,
   });
 
   Color _accuracyColor() {
@@ -30,14 +32,13 @@ class LiveDataCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Live Data',
-                style: Theme.of(context).textTheme.titleMedium),
+            Text('Live Data', style: Theme.of(context).textTheme.titleMedium),
             const SizedBox(height: 12),
             Text(
               '${currentSpeed.toStringAsFixed(1)} km/h',
               style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                    color: isTripActive ? Colors.green : Colors.grey,
-                  ),
+                color: isTripActive ? Colors.green : Colors.grey,
+              ),
             ),
             const SizedBox(height: 4),
             Text(
@@ -68,6 +69,14 @@ class LiveDataCard extends StatelessWidget {
               Text(
                 'Checking if trip ended... ${(cooldownProgress * 100).toStringAsFixed(0)}%',
                 style: const TextStyle(color: Colors.orange, fontSize: 12),
+              ),
+            ],
+            if (isTripActive) ...[
+              const SizedBox(height: 12),
+              OutlinedButton.icon(
+                onPressed: onManualStopTrip,
+                icon: const Icon(Icons.flag_outlined),
+                label: const Text('End Trip Manually'),
               ),
             ],
           ],
